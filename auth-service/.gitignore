@@ -35,23 +35,3 @@ out/
 
 ### VS Code ###
 .vscode/
-
-# Node / React
-node_modules/
-**/node_modules/
-dist/
-**/dist/
-
-# Environment files
-.env
-.env.*
-!.env.example
-
-# Local configuration
-application-local.yml
-application-local.yaml
-**/application-local.yml
-**/application-local.yaml
-
-# Runtime uploaded files
-**/uploads/

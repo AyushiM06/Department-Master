@@ -1,0 +1,44 @@
+plugins {
+	id 'java'
+	id 'maven-publish'
+}
+
+group = 'com.dreamsol'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+
+	withSourcesJar()
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	implementation 'org.apache.poi:poi-ooxml:5.4.1'
+
+	implementation 'org.springframework.boot:spring-boot-starter-cache:4.1.1'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis:4.1.1'
+	implementation 'org.springframework.boot:spring-boot-starter-mail:4.1.1'
+	implementation 'org.springframework.boot:spring-boot-starter-validation:4.1.1'
+
+	compileOnly 'org.projectlombok:lombok:1.18.38'
+	annotationProcessor 'org.projectlombok:lombok:1.18.38'
+}
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			from components.java
+		}
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
