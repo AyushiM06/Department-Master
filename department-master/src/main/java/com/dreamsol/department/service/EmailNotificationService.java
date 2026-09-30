@@ -67,30 +67,6 @@ public class EmailNotificationService {
         }
     }
 
-    public EmailNotification createExportEmailNotification(String filePath, String fileName, Integer totalRecords, LocalDate fromDate, LocalDate toDate) {
-        try {
-            EmailNotification notification = new EmailNotification();
-            notification.setSubject("Department Excel Export - " + fromDate + " to " + toDate);
-            notification.setRecipient(notificationEmail);
-            notification.setBody("Department Excel export has been generated successfully.\n\nExcel File: " + fileName + "\nFrom Date: " + fromDate + "\nTo Date: " + toDate + "\nTotal Records: " + totalRecords + "\n\nThe selected date range is greater than 7 days, so the Excel file has been sent through email.\n\nRegards,\nDepartment Master System");
-            notification.setStatus(STATUS_PENDING);
-            notification.setCreatedAt(LocalDateTime.now());
-            notification.setAttachmentPath(filePath);
-            notification.setAttachmentFileName(fileName);
-            notification.setTotalRecords(totalRecords);
-            notification.setSavedRecords(null);
-            notification.setDuplicateRecords(null);
-            notification.setInvalidRecords(null);
-            notification.setDepartmentId(null);
-            EmailNotification savedNotification = emailNotificationRepository.save(notification);
-            applicationContext.getBean(EmailNotificationService.class).sendExportEmailAsync(savedNotification.getId());
-            return savedNotification;
-        } catch (Exception ex) {
-            log.error("Error while creating department export email notification", ex);
-            throw new RuntimeException("Unable to create department export email notification", ex);
-        }
-    }
-
     public ResponseEntity<?> createExportEmailNotification(String filePath, String fileName, LocalDate fromDate, LocalDate toDate, Integer totalRecords) {
         try {
             EmailNotification notification = new EmailNotification();
@@ -107,7 +83,7 @@ public class EmailNotificationService {
             notification.setInvalidRecords(null);
             notification.setDepartmentId(null);
             EmailNotification savedNotification = emailNotificationRepository.save(notification);
-            applicationContext.getBean(EmailNotificationService.class).sendExportEmailAsync(savedNotification.getId());
+            applicationContext.getBean(EmailNotificationService.class).sendEmailAsync(savedNotification.getId());
             return ResponseEntity.ok(savedNotification);
         } catch (Exception ex) {
             log.error("Error while creating department export email notification", ex);
@@ -188,7 +164,7 @@ public class EmailNotificationService {
             notification.setInvalidRecords(null);
             notification.setDepartmentId(null);
             EmailNotification savedNotification = emailNotificationRepository.save(notification);
-            applicationContext.getBean(EmailNotificationService.class).sendDepartmentEmailAsync(savedNotification.getId());
+            applicationContext.getBean(EmailNotificationService.class).sendEmailAsync(savedNotification.getId());
             return ResponseEntity.ok(savedNotification);
         } catch (Exception ex) {
             log.error("Error while creating department email notification | departmentIds={} | action={}", departmentIds, action, ex);
@@ -197,7 +173,7 @@ public class EmailNotificationService {
     }
 
     @Async("emailTaskExecutor")
-    public void sendDepartmentEmailAsync(Long notificationId) {
+    public void sendEmailAsync(Long notificationId) {
         long start = System.currentTimeMillis();
         try {
             log.info("ASYNC EMAIL START | notificationId={}", notificationId);
@@ -210,33 +186,8 @@ public class EmailNotificationService {
             emailNotificationRepository.save(notification);
             log.info("ASYNC EMAIL COMPLETED | notificationId={} | time={} ms | status={}", notificationId, System.currentTimeMillis() - start, notification.getStatus());
         } catch (Exception ex) {
-            log.error("Async department email failed | notificationId={}", notificationId, ex);
-            emailNotificationRepository.findById(notificationId).ifPresent(notification -> {
-                notification.setStatus(STATUS_FAILED);
-                emailNotificationRepository.save(notification);
-            });
-        }
-    }
-
-    @Async("emailTaskExecutor")
-    public void sendExportEmailAsync(Long notificationId) {
-        long start = System.currentTimeMillis();
-        try {
-            log.info("ASYNC EXPORT EMAIL START | notificationId={}", notificationId);
-            EmailNotification notification = emailNotificationRepository.findById(notificationId).orElse(null);
-            if (Objects.isNull(notification)) {
-                log.warn("Export email notification not found | notificationId={}", notificationId);
-                return;
-            }
-            sendEmail(notification);
-            emailNotificationRepository.save(notification);
-            log.info("ASYNC EXPORT EMAIL COMPLETED | notificationId={} | time={} ms | status={}", notificationId, System.currentTimeMillis() - start, notification.getStatus());
-        } catch (Exception ex) {
-            log.error("Async export email failed | notificationId={}", notificationId, ex);
-            emailNotificationRepository.findById(notificationId).ifPresent(notification -> {
-                notification.setStatus(STATUS_FAILED);
-                emailNotificationRepository.save(notification);
-            });
+            log.error("Async email failed | notificationId={}", notificationId, ex);
+            emailNotificationRepository.findById(notificationId).ifPresent(notification -> {notification.setStatus(STATUS_FAILED);emailNotificationRepository.save(notification);});
         }
     }
 

@@ -266,12 +266,39 @@ export const getDepartmentCount = async (fromDate?: string | null, toDate?: stri
   return response.data;
 };
 
-export const uploadDepartmentAttachment = async (departmentId: number, file: File, attachmentType: "LOGO" | "DOCUMENT") => {
+export interface DepartmentAttachmentUpload {
+  departmentId: number;
+  file: File;
+  attachmentType: "LOGO" | "DOCUMENT";
+}
+
+export const uploadDepartmentAttachment = async (
+  attachments: DepartmentAttachmentUpload[],
+) => {
   const formData = new FormData();
-  formData.append("departmentId", String(departmentId));
-  formData.append("file", file);
-  formData.append("attachmentType", attachmentType);
-  const response = await api.post("/upload", formData);
+
+  attachments.forEach((attachment) => {
+    formData.append(
+      "departmentIds",
+      String(attachment.departmentId),
+    );
+
+    formData.append(
+      "files",
+      attachment.file,
+    );
+
+    formData.append(
+      "attachmentTypes",
+      attachment.attachmentType,
+    );
+  });
+
+  const response = await api.post(
+    "/upload",
+    formData,
+  );
+
   return response.data;
 };
 

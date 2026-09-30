@@ -36,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,6 +53,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -79,14 +82,19 @@ public class DepartmentService {
                 Department department = Objects.isNull(id) ? new Department() : existingDepartments.get(id);
                 if (Objects.isNull(department)) return null;
                 boolean duplicate = Objects.isNull(id) ? departmentRepository.existsByDepartmentName(request.getDepartmentName()) : departmentRepository.existsByDepartmentNameAndIdNot(request.getDepartmentName(), id);
-                if (duplicate || (Objects.nonNull(id) && Objects.equals(id, request.getParentDepartment()))) return null;
+                if (duplicate || (Objects.nonNull(id) && Objects.equals(id, request.getParentDepartment())))
+                    return null;
+                String existingDepartmentCode = department.getDepartmentCode();
                 BeanUtils.copyProperties(request, department);
+                if (department.getDepartmentPhone() != null && department.getDepartmentPhone().isBlank())
+                    department.setDepartmentPhone(null);
                 if (Objects.isNull(id)) {
                     department.setCreatedBy(loggedInUserId);
                     department.setUpdatedBy(null);
                     String prefix = Arrays.stream(request.getDepartmentName().trim().split("\\s+")).map(word -> word.substring(0, 1).toUpperCase()).collect(Collectors.joining());
                     department.setDepartmentCode(prefix + UUID.randomUUID().toString().replace("-", "").substring(0, 3).toUpperCase());
                 } else {
+                    department.setDepartmentCode(existingDepartmentCode);
                     department.setUpdatedBy(loggedInUserId);
                 }
                 return department;
@@ -151,7 +159,8 @@ public class DepartmentService {
     public ResponseEntity<?> getDepartmentCount(LocalDateTime fromDate, LocalDateTime toDate) {
         try {
             DepartmentStatusCountResponseDto count;
-            if (fromDate != null && toDate != null) count = departmentRepository.getDepartmentStatusCountByDate(fromDate, toDate);
+            if (fromDate != null && toDate != null)
+                count = departmentRepository.getDepartmentStatusCountByDate(fromDate, toDate);
             else count = departmentRepository.getDepartmentStatusCount();
             return ResponseEntity.ok(count);
         } catch (Exception ex) {
@@ -179,27 +188,39 @@ public class DepartmentService {
         }
     }
 
-    public ResponseEntity<Resource> uploadAttachment(Long departmentId, MultipartFile file, String attachmentType) {
+    public ResponseEntity<?> uploadAttachment(List<Long> departmentIds, List<MultipartFile> files, List<String> attachmentTypes) {
         try {
-            if (Objects.isNull(file) || file.isEmpty()) return ResponseEntity.badRequest().build();
-            if (!departmentRepository.existsById(departmentId)) return ResponseEntity.notFound().build();
-            String uuid = UUID.randomUUID().toString();
-            String fileName = file.getOriginalFilename();
-            String extension = Objects.nonNull(fileName) && fileName.contains(".") ? fileName.substring(fileName.lastIndexOf(".")) : "";
+            if (Objects.isNull(departmentIds) || Objects.isNull(files) || Objects.isNull(attachmentTypes) || departmentIds.size() != files.size() || files.size() != attachmentTypes.size())
+                return ResponseEntity.badRequest().build();
             Path directory = Paths.get("uploads/department");
             Files.createDirectories(directory);
-            Path filePath = directory.resolve(uuid + extension);
-            Files.copy(file.getInputStream(), filePath);
-            DepartmentAttachment attachment = new DepartmentAttachment();
-            attachment.setUuid(uuid);
-            attachment.setDepartmentId(departmentId);
-            attachment.setFileName(fileName);
-            attachment.setFilePath(filePath.toString());
-            attachment.setAttachmentType(attachmentType);
-            departmentAttachmentRepository.save(attachment);
-            return ResponseEntity.status(HttpStatus.CREATED).body(null);
+            List<DepartmentAttachment> attachments = IntStream.range(0, files.size()).mapToObj(index -> {
+                MultipartFile file = files.get(index);
+                Long departmentId = departmentIds.get(index);
+                String attachmentType = attachmentTypes.get(index);
+                if (Objects.isNull(file) || file.isEmpty() || !departmentRepository.existsById(departmentId)) return null;
+                try {
+                    String uuid = UUID.randomUUID().toString();
+                    String fileName = file.getOriginalFilename();
+                    String extension = fileName != null && fileName.contains(".") ? fileName.substring(fileName.lastIndexOf(".")) : "";
+                    Path filePath = directory.resolve(uuid + extension);
+                    Files.copy(file.getInputStream(), filePath);
+                    DepartmentAttachment attachment = new DepartmentAttachment();
+                    attachment.setUuid(uuid);
+                    attachment.setDepartmentId(departmentId);
+                    attachment.setFileName(fileName);
+                    attachment.setFilePath(filePath.toString());
+                    attachment.setAttachmentType(attachmentType.trim().toUpperCase());
+                    return attachment;
+                } catch (IOException ex) {
+                    return null;
+                }
+            }).filter(Objects::nonNull).toList();
+            if (attachments.size() != files.size()) return ResponseEntity.badRequest().build();
+            departmentAttachmentRepository.saveAll(attachments);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Attachments uploaded successfully", "uploadedCount", attachments.size()));
         } catch (Exception ex) {
-            log.error("Error while uploading attachment", ex);
+            log.error("Error while uploading department attachments", ex);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -247,7 +268,8 @@ public class DepartmentService {
             Map<String, long[]> typeStatusMap = new java.util.LinkedHashMap<>();
             departments.forEach(department -> {
                 long[] counts = typeStatusMap.computeIfAbsent(department.getDepartmentType(), key -> new long[2]);
-                if (department.isStatus()) counts[1]++; else counts[0]++;
+                if (department.isStatus()) counts[1]++;
+                else counts[0]++;
             });
             List<DepartmentTypeStatusResponseDto> typeStatusStats = typeStatusMap.entrySet().stream().map(entry -> new DepartmentTypeStatusResponseDto(entry.getKey(), entry.getValue()[0], entry.getValue()[1])).toList();
             Map<String, Object> response = new java.util.LinkedHashMap<>();
@@ -289,17 +311,25 @@ public class DepartmentService {
 
     private Comparator<DepartmentListResponseDto> getComparator(DepartmentSearchRequestDto request) {
         Comparator<DepartmentListResponseDto> comparator = switch (request.getSortBy()) {
-            case "departmentCode" -> Comparator.comparing(DepartmentListResponseDto::getDepartmentCode, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
-            case "shortName" -> Comparator.comparing(DepartmentListResponseDto::getShortName, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
-            case "departmentType" -> Comparator.comparing(DepartmentListResponseDto::getDepartmentType, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
-            case "departmentEmail" -> Comparator.comparing(DepartmentListResponseDto::getDepartmentEmail, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
-            case "createdAt" -> Comparator.comparing(DepartmentListResponseDto::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder()));
-            case "updatedAt" -> Comparator.comparing(department -> department.getUpdatedAt() != null ? department.getUpdatedAt() : department.getCreatedAt(), Comparator.nullsFirst(Comparator.naturalOrder()));
-            default -> Comparator.comparing(DepartmentListResponseDto::getDepartmentName, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
+            case "departmentCode" ->
+                    Comparator.comparing(DepartmentListResponseDto::getDepartmentCode, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
+            case "shortName" ->
+                    Comparator.comparing(DepartmentListResponseDto::getShortName, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
+            case "departmentType" ->
+                    Comparator.comparing(DepartmentListResponseDto::getDepartmentType, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
+            case "departmentEmail" ->
+                    Comparator.comparing(DepartmentListResponseDto::getDepartmentEmail, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
+            case "createdAt" ->
+                    Comparator.comparing(DepartmentListResponseDto::getCreatedAt, Comparator.nullsFirst(Comparator.naturalOrder()));
+            case "updatedAt" ->
+                    Comparator.comparing(department -> department.getUpdatedAt() != null ? department.getUpdatedAt() : department.getCreatedAt(), Comparator.nullsFirst(Comparator.naturalOrder()));
+            default ->
+                    Comparator.comparing(DepartmentListResponseDto::getDepartmentName, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER));
         };
         if ("updatedAt".equalsIgnoreCase(request.getSortBy())) {
             Comparator<DepartmentListResponseDto> idComparator = Comparator.comparing(DepartmentListResponseDto::getId, Comparator.nullsFirst(Comparator.naturalOrder()));
-            if ("desc".equalsIgnoreCase(request.getDirection())) return comparator.reversed().thenComparing(idComparator.reversed());
+            if ("desc".equalsIgnoreCase(request.getDirection()))
+                return comparator.reversed().thenComparing(idComparator.reversed());
             else return comparator.thenComparing(idComparator);
         }
         return "desc".equalsIgnoreCase(request.getDirection()) ? comparator.reversed() : comparator;

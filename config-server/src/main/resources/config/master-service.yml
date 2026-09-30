@@ -3,9 +3,9 @@ spring:
     name: master-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/master_db
+    url: jdbc:mysql://mysql:3306/master_db
     username: root
-    password: ${MASTER_DB_PASSWORD}
+    password: ayushi
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -20,13 +20,13 @@ server:
   port: 8083
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: dreamsol-department-master-jwt-secret-key-2026
   expiration: 3600000
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
 

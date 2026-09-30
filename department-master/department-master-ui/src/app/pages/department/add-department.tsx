@@ -34,6 +34,7 @@ import {
   getDepartmentDropdownData,
   searchDepartments,
   type DepartmentDropdownResponse,
+  type DepartmentAttachmentUpload,
 } from "./departmentApi";
 
 export interface Option {
@@ -259,129 +260,268 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
   }, []);
 
   const onSubmit = async (formValues: AddDepartmentFormValues) => {
-    try {
-      for (let index = 0; index < formValues.departments.length; index++) {
-        const formValuesItem = formValues.departments[index];
+  try {
+    // ============================================================
+    // 1. CREATE ALL DEPARTMENT PAYLOADS
+    // ============================================================
 
-        const payload = {
-          departmentName: formValuesItem.departmentName,
-          shortName: formValuesItem.shortName,
-          departmentType: formValuesItem.departmentType,
+    const payloads = formValues.departments.map((formValuesItem) => ({
+      departmentName: formValuesItem.departmentName,
 
-          parentDepartment: formValuesItem.parentDepartment
-            ? Number(formValuesItem.parentDepartment.value)
-            : null,
+      shortName: formValuesItem.shortName,
 
-          departmentHead: formValuesItem.departmentHead
-            ? Number(formValuesItem.departmentHead.value)
-            : null,
+      departmentType: formValuesItem.departmentType,
 
-          branches: Array.isArray(formValuesItem.branches)
-            ? formValuesItem.branches
-                .map(Number)
-                .filter((id: number) => Number.isFinite(id))
-            : [],
+      parentDepartment: formValuesItem.parentDepartment
+        ? Number(formValuesItem.parentDepartment.value)
+        : null,
 
-          businessUnit: formValuesItem.businessUnit
-            ? Number(formValuesItem.businessUnit)
-            : null,
+      departmentHead: formValuesItem.departmentHead
+        ? Number(formValuesItem.departmentHead.value)
+        : null,
 
-          costCenter: formValuesItem.costCenter,
-          departmentEmail: formValuesItem.departmentEmail,
-          departmentPhone: formValuesItem.departmentPhone,
+      branches: Array.isArray(formValuesItem.branches)
+        ? formValuesItem.branches
+            .map(Number)
+            .filter((id: number) => Number.isFinite(id))
+        : [],
 
-          workingDays: Array.isArray(formValuesItem.workingDays)
-            ? formValuesItem.workingDays.map(String)
-            : [],
+      businessUnit: formValuesItem.businessUnit
+        ? Number(formValuesItem.businessUnit)
+        : null,
 
-          workingShift: formValuesItem.workingShift
-            ? Number(formValuesItem.workingShift)
-            : null,
+      costCenter: formValuesItem.costCenter,
 
-          description: formValuesItem.description,
+      departmentEmail:
+        formValuesItem.departmentEmail?.trim() || undefined,
 
-          departmentLogo: isFile(formValuesItem.departmentLogo)
-            ? formValuesItem.departmentLogo.name
-            : null,
+      departmentPhone:
+        formValuesItem.departmentPhone?.trim() || undefined,
 
-          documentPath: isFile(formValuesItem.supportingDocument)
-            ? formValuesItem.supportingDocument.name
-            : null,
+      workingDays: Array.isArray(formValuesItem.workingDays)
+        ? formValuesItem.workingDays.map(String)
+        : [],
 
-          tags: Array.isArray(formValuesItem.tags)
-            ? formValuesItem.tags.map((tag: MultiAutoCompleteOption) =>
-                String(tag.value),
-              )
-            : [],
+      workingShift: formValuesItem.workingShift
+        ? Number(formValuesItem.workingShift)
+        : null,
 
-          keywords: formValuesItem.keywords,
-          remarks: formValuesItem.remarks,
-          status: false,
-        };
+      description: formValuesItem.description,
 
-        const response = await createDepartment([payload]);
+      departmentLogo: isFile(formValuesItem.departmentLogo)
+        ? formValuesItem.departmentLogo.name
+        : undefined,
 
-        const savedDepartmentId = response?.data?.id;
+      documentPath: isFile(formValuesItem.supportingDocument)
+        ? formValuesItem.supportingDocument.name
+        : undefined,
 
-        if (savedDepartmentId && isFile(formValuesItem.departmentLogo)) {
-          await uploadDepartmentAttachment(
-            savedDepartmentId,
-            formValuesItem.departmentLogo,
-            "LOGO",
-          );
-        }
+      tags: Array.isArray(formValuesItem.tags)
+        ? formValuesItem.tags.map(
+            (tag: MultiAutoCompleteOption) =>
+              String(tag.value),
+          )
+        : [],
 
-        if (savedDepartmentId && isFile(formValuesItem.supportingDocument)) {
-          await uploadDepartmentAttachment(
-            savedDepartmentId,
-            formValuesItem.supportingDocument,
-            "DOCUMENT",
-          );
-        }
-      }
+      keywords: formValuesItem.keywords,
 
-      await Swal.fire({
-        text:
-          formValues.departments.length > 1
-            ? `${formValues.departments.length} Departments Added Successfully`
-            : "Department Added Successfully",
-        icon: "success",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      remarks: formValuesItem.remarks,
 
-      await onClose();
-    } catch (error) {
-      console.error("FAILED TO SAVE DEPARTMENTS:", error);
+      // New department = Active
+      status: false,
+    }));
 
-      if (axios.isAxiosError(error)) {
-        const backendData = error.response?.data;
+    console.log(
+      "ALL DEPARTMENT PAYLOADS:",
+      payloads,
+    );
 
-        const errorMessage =
-          typeof backendData === "string"
-            ? backendData
-            : (backendData?.error ??
+    // ============================================================
+    // 2. SAVE ALL DEPARTMENTS
+    // ONLY ONE API CALL
+    // ============================================================
+
+    const response = await createDepartment(payloads);
+
+    console.log(
+      "BULK DEPARTMENT SAVE RESPONSE:",
+      response,
+    );
+
+    /*
+     * createDepartment() ka response actual axios response
+     * hai ya direct data, uske according list nikal rahe hain.
+     */
+
+    const savedDepartments = Array.isArray(response)
+      ? response
+      : Array.isArray(response?.data)
+        ? response.data
+        : [];
+
+    console.log(
+      "SAVED DEPARTMENTS:",
+      savedDepartments,
+    );
+
+    if (
+      savedDepartments.length !==
+      formValues.departments.length
+    ) {
+      throw new Error(
+        `Expected ${formValues.departments.length} departments to be saved, but ${savedDepartments.length} were returned.`,
+      );
+    }
+
+    // ============================================================
+    // 3. COLLECT ALL ATTACHMENTS
+    // ============================================================
+
+    const attachments: DepartmentAttachmentUpload[] =
+      formValues.departments.flatMap(
+        (formValuesItem, index) => {
+
+          const savedDepartment =
+            savedDepartments[index];
+
+          const savedDepartmentId =
+            savedDepartment?.id;
+
+          if (!savedDepartmentId) {
+            return [];
+          }
+
+          const departmentAttachments: DepartmentAttachmentUpload[] =
+            [];
+
+          // --------------------------------------------------------
+          // LOGO
+          // --------------------------------------------------------
+
+          if (
+            isFile(
+              formValuesItem.departmentLogo,
+            )
+          ) {
+            departmentAttachments.push({
+              departmentId:
+                Number(savedDepartmentId),
+
+              file:
+                formValuesItem.departmentLogo,
+
+              attachmentType:
+                "LOGO",
+            });
+          }
+
+          // --------------------------------------------------------
+          // DOCUMENT
+          // --------------------------------------------------------
+
+          if (
+            isFile(
+              formValuesItem.supportingDocument,
+            )
+          ) {
+            departmentAttachments.push({
+              departmentId:
+                Number(savedDepartmentId),
+
+              file:
+                formValuesItem.supportingDocument,
+
+              attachmentType:
+                "DOCUMENT",
+            });
+          }
+
+          return departmentAttachments;
+        },
+      );
+
+    console.log(
+      "ALL ATTACHMENTS:",
+      attachments,
+    );
+
+    // ============================================================
+    // 4. UPLOAD ALL ATTACHMENTS
+    // ONLY ONE API CALL
+    // ============================================================
+
+    if (attachments.length > 0) {
+      await uploadDepartmentAttachment(
+        attachments,
+      );
+    }
+
+    // ============================================================
+    // 5. SUCCESS
+    // ============================================================
+
+    await Swal.fire({
+      text:
+        formValues.departments.length > 1
+          ? `${formValues.departments.length} Departments Added Successfully`
+          : "Department Added Successfully",
+
+      icon: "success",
+
+      timer: 2000,
+
+      showConfirmButton: false,
+    });
+
+    // ============================================================
+    // 6. CLOSE
+    // ============================================================
+
+    await onClose();
+
+  } catch (error) {
+    console.error(
+      "FAILED TO SAVE DEPARTMENTS:",
+      error,
+    );
+
+    if (axios.isAxiosError(error)) {
+      const backendData =
+        error.response?.data;
+
+      const errorMessage =
+        typeof backendData === "string"
+          ? backendData
+          : (
+              backendData?.error ??
               backendData?.message ??
-              "Failed to save department");
-
-        await Swal.fire({
-          text: errorMessage,
-          icon: "error",
-          timer: 3000,
-          showConfirmButton: false,
-        });
-
-        return;
-      }
+              "Failed to save department"
+            );
 
       await Swal.fire({
-        text: "Something went wrong while saving departments",
+        text: errorMessage,
         icon: "error",
         timer: 3000,
         showConfirmButton: false,
       });
+
+      return;
     }
-  };
+
+    await Swal.fire({
+      text:
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while saving departments",
+
+      icon: "error",
+
+      timer: 3000,
+
+      showConfirmButton: false,
+    });
+  }
+};
 
   const handleAddDepartment = async () => {
     const isValid = await trigger();

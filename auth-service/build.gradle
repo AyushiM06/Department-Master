@@ -18,6 +18,7 @@ java {
 }
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
@@ -26,6 +27,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'com.dreamsol:common-service:0.0.1-SNAPSHOT'
 
 	implementation 'org.springframework.cloud:spring-cloud-starter-config'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
@@ -35,10 +37,6 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	runtimeOnly 'com.mysql:mysql-connector-j'
-
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'

@@ -32,8 +32,4 @@ public class ValidationUtil {
                 .collect(Collectors.joining(", "));
     }
 
-    public boolean isValid(Object object) {
-
-        return getValidationError(object) == null;
-    }
 }

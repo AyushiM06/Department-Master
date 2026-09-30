@@ -3,9 +3,9 @@ spring:
     name: department-master
 
   datasource:
-    url: jdbc:mysql://localhost:3306/department_management
+    url: jdbc:mysql://mysql:3306/department_management
     username: root
-    password: ${DEPARTMENT_DB_PASSWORD}
+    password: ayushi
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -23,7 +23,7 @@ spring:
 
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
 
   cache:
@@ -36,7 +36,7 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: ayushim@dreamsol.biz
-    password: ${MAIL_PASSWORD}
+    password: apoc yjwi louh znzi
     properties:
       mail:
         smtp:
@@ -49,18 +49,18 @@ department:
     email: ayushim@dreamsol.biz
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: dreamsol-department-master-jwt-secret-key-2026
 
 master-service:
-  url: http://localhost:8083
+  url: http://master-service:8083
 
 user-service:
-  url: http://localhost:8082
+  url: http://user-service:8082
 
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
 
   instance:
     prefer-ip-address: true

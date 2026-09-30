@@ -1,4 +1,4 @@
-package com.dreamsol.department.service;
+package com.dreamsol.user.service;
 
 import com.dreamsol.common.security.CommonJwtService;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +10,6 @@ public class JwtService {
 
     private final CommonJwtService commonJwtService;
 
-    public boolean isTokenValid(String token) {
-        return commonJwtService.isTokenValid(token);
-    }
-
     public String extractUsername(String token) {
         return commonJwtService.extractUsername(token);
     }
@@ -22,7 +18,7 @@ public class JwtService {
         return commonJwtService.extractRole(token);
     }
 
-    public Long extractUserId(String token) {
-        return commonJwtService.extractUserId(token);
+    public boolean isTokenValid(String token) {
+        return commonJwtService.isTokenValid(token);
     }
 }

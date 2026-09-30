@@ -1,10 +1,10 @@
 package com.dreamsol.department.controller;
 
-import com.dreamsol.department.dto.DepartmentDetailResponseDto;
 import com.dreamsol.department.dto.DepartmentRequestDto;
 import com.dreamsol.department.dto.DepartmentSearchRequestDto;
 import com.dreamsol.department.repository.DepartmentRepository;
 import com.dreamsol.department.service.DepartmentService;
+import com.dreamsol.department.service.DepartmentHistoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -31,9 +31,10 @@ import java.util.Objects;
 public class DepartmentController {
     private final DepartmentService departmentService;
     private final DepartmentRepository departmentRepository;
+    private final DepartmentHistoryService departmentHistoryService;
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
-    @PostMapping("/save")
+    @PostMapping("save")
     public ResponseEntity<?> saveOrUpdate(@RequestBody List<DepartmentRequestDto> requests) {
         return departmentService.saveOrUpdate(requests);
     }
@@ -58,18 +59,9 @@ public class DepartmentController {
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
     @GetMapping("count")
-    public ResponseEntity<?> getDepartmentCount(
-            @RequestParam(required = false) String fromDate,
-            @RequestParam(required = false) String toDate
-    ) {
-        LocalDateTime from = fromDate != null && !fromDate.isBlank()
-                ? LocalDateTime.parse(fromDate + "T00:00:00")
-                : null;
-
-        LocalDateTime to = toDate != null && !toDate.isBlank()
-                ? LocalDateTime.parse(toDate + "T23:59:59")
-                : null;
-
+    public ResponseEntity<?> getDepartmentCount(@RequestParam(required = false) String fromDate, @RequestParam(required = false) String toDate) {
+        LocalDateTime from = fromDate != null && !fromDate.isBlank() ? LocalDateTime.parse(fromDate + "T00:00:00") : null;
+        LocalDateTime to = toDate != null && !toDate.isBlank() ? LocalDateTime.parse(toDate + "T23:59:59") : null;
         return departmentService.getDepartmentCount(from, to);
     }
 
@@ -81,8 +73,8 @@ public class DepartmentController {
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
     @PostMapping("upload")
-    public ResponseEntity<?> uploadAttachment(@RequestParam Long departmentId, @RequestParam("file") MultipartFile file, @RequestParam String attachmentType) {
-        return departmentService.uploadAttachment(departmentId, file, attachmentType);
+    public ResponseEntity<?> uploadAttachment(@RequestParam List<Long> departmentIds, @RequestParam List<MultipartFile> files, @RequestParam List<String> attachmentTypes) {
+        return departmentService.uploadAttachment(departmentIds, files, attachmentTypes);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
@@ -91,28 +83,34 @@ public class DepartmentController {
         return departmentService.downloadAttachment(uuid);
     }
 
-    @DeleteMapping("/attachments/{uuid}")
+    @DeleteMapping("attachments/{uuid}")
     public ResponseEntity<?> deleteAttachment(@PathVariable String uuid) {
         return departmentService.deleteAttachment(uuid);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/internal/import-save")
+    @PostMapping("internal/import-save")
     public ResponseEntity<?> importSave(@RequestBody List<DepartmentRequestDto> requests) {
         return departmentService.saveOrUpdate(requests);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/internal/export-data")
+    @GetMapping("internal/export-data")
     public ResponseEntity<?> exportData() {
         return ResponseEntity.ok(departmentRepository.findDepartmentsForExport());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/dashboard-statistics")
+    @GetMapping("dashboard-statistics")
     public ResponseEntity<?> getDashboardStatistics(@RequestParam String fromDate, @RequestParam String toDate, @RequestParam(required = false) String search) {
         LocalDateTime from = LocalDateTime.parse(fromDate + "T00:00:00");
         LocalDateTime to = LocalDateTime.parse(toDate + "T23:59:59");
         return departmentService.getDashboardStatistics(from, to, search);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
+    @GetMapping("history/{departmentId}")
+    public ResponseEntity<?> getDepartmentHistory(@PathVariable Long departmentId) {
+        return ResponseEntity.ok(departmentHistoryService.getDepartmentHistory(departmentId));
     }
 }

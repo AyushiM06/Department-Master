@@ -1346,6 +1346,7 @@ function DepartmentActivity() {
     [
       branchOptions,
       businessUnitOptions,
+      departmentHeadOptions,
       userMap,
       canUpdateDepartment,
       canDeleteDepartment,

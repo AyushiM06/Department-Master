@@ -4,7 +4,6 @@ import com.dreamsol.auth.client.UserClient;
 import com.dreamsol.auth.dto.LoginRequestDto;
 import com.dreamsol.auth.dto.LoginResponseDto;
 import com.dreamsol.auth.dto.UserResponseDto;
-import com.dreamsol.auth.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

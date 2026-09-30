@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Gradle
+.gradle
+**/.gradle
+**/build
+**/.build
+
+# IntelliJ
+.idea
+**/.idea
+*.iml
+
+# Node
+node_modules
+**/node_modules
+
+# Frontend generated files
+**/dist
+**/.vite
+
+# Logs
+*.log
+
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
