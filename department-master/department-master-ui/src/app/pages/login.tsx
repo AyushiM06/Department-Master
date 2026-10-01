@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
-import axios from "axios";
+import { isAxiosError } from "axios";
+import axiosInstance from "../../api/axiosInstance";
 
 import type { UserRole } from "../../utils/rolePermissions";
 
@@ -14,10 +15,6 @@ const COLORS = {
   text: "#173F3B",
   secondaryText: "#64748B",
 };
-
-/* =========================================================
-   EXTRACT ROLE FROM JWT
-========================================================= */
 
 const getRoleFromToken = (token: string): UserRole | null => {
   try {
@@ -57,11 +54,6 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  /* =========================================================
-     LOGIN
-  ========================================================= */
-
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required");
@@ -72,13 +64,10 @@ function Login() {
       setLoading(true);
       setError("");
 
-      const response = await axios.post(
-        "http://localhost:8085/api/auth/login",
-        {
-          username: username.trim(),
-          password,
-        },
-      );
+      const response = await axiosInstance.post("/api/auth/login", {
+        username: username.trim(),
+        password,
+      });
 
       const token = response.data?.token;
 
@@ -87,17 +76,9 @@ function Login() {
         return;
       }
 
-      /* =====================================================
-         STORE LOGIN INFORMATION
-      ===================================================== */
-
       sessionStorage.setItem("token", token);
 
       localStorage.setItem("isLoggedIn", "true");
-
-      /* =====================================================
-         READ ROLE FROM JWT
-      ===================================================== */
 
       const role = getRoleFromToken(token);
 
@@ -109,17 +90,7 @@ function Login() {
 
         return;
       }
-
-      /* =====================================================
-         STORE ROLE
-      ===================================================== */
-
       sessionStorage.setItem("role", role);
-
-      /* =====================================================
-         ROLE BASED LANDING PAGE
-      ===================================================== */
-
       if (role === "ADMIN") {
         navigate("/dashboard", {
           replace: true,
@@ -130,7 +101,7 @@ function Login() {
         });
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
+      if (isAxiosError(error)) {
         if (error.response?.status === 401) {
           setError("Invalid username or password");
         } else if (error.response?.status === 400) {
