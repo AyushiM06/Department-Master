@@ -923,18 +923,6 @@ function Dashboard() {
     return user?.username || String(id);
   };
 
-  const displayValue = (value: unknown): string => {
-    if (value === null || value === undefined) {
-      return "NA";
-    }
-
-    if (typeof value === "string" && value.trim() === "") {
-      return "NA";
-    }
-
-    return String(value);
-  };
-
   const getDepartmentTableHeader = (field: string, fallback: string) => {
     return (
       departmentTableHeaders.find((item) => item.field === field)?.header ??

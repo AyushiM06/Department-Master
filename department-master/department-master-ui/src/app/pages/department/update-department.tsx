@@ -28,6 +28,7 @@ import type { MultiAutoCompleteOption } from "../../component/MultiAutoComplete"
 import {
   updateDepartment,
   uploadDepartmentAttachment,
+  type DepartmentAttachmentUpload,
   createDepartmentEmailNotification,
   searchDepartments,
   searchEmployees,
@@ -513,21 +514,27 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
 
       await updateDepartment(department.id, payload);
 
-      if (isFile(formValues.departmentLogo)) {
-        await uploadDepartmentAttachment(
-          department.id,
-          formValues.departmentLogo,
-          "LOGO",
-        );
-      }
+      const attachments: DepartmentAttachmentUpload[] = [];
 
-      if (isFile(formValues.supportingDocument)) {
-        await uploadDepartmentAttachment(
-          department.id,
-          formValues.supportingDocument,
-          "DOCUMENT",
-        );
-      }
+if (isFile(formValues.departmentLogo)) {
+  attachments.push({
+    departmentId: department.id,
+    file: formValues.departmentLogo,
+    attachmentType: "LOGO",
+  });
+}
+
+if (isFile(formValues.supportingDocument)) {
+  attachments.push({
+    departmentId: department.id,
+    file: formValues.supportingDocument,
+    attachmentType: "DOCUMENT",
+  });
+}
+
+if (attachments.length > 0) {
+  await uploadDepartmentAttachment(attachments);
+}
 
       await Swal.fire({
         text: "Department updated successfully!",

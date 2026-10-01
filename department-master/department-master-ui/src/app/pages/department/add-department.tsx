@@ -93,7 +93,7 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
 
   const [dropdownLoading, setDropdownLoading] = useState(false);
   const [parentDepartmentLoading, setParentDepartmentLoading] = useState(false);
-  const [departmentHeadLoading, setDepartmentHeadLoading] = useState(false);
+  const [, setDepartmentHeadLoading] = useState(false);
 
   const {
     control,

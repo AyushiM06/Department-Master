@@ -338,10 +338,10 @@ function DepartmentActivity() {
   >(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploading] = useState(false);
   const [importResultOpen, setImportResultOpen] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [, setImporting] = useState(false);
   const [savingImported, setSavingImported] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [templateDownloadLoading, setTemplateDownloadLoading] = useState(false);
@@ -1412,7 +1412,6 @@ function DepartmentActivity() {
       return parentDepartment?.label ?? "NA";
     };
     const renderFormattedChange = (
-  oldValue: string,
   newValue: string,
   action: string,
   isUnchanged: boolean,
@@ -1498,11 +1497,11 @@ function DepartmentActivity() {
       if (!change) {
         return NA_LABEL;
       }
-      const oldValue = formatMappedValue(change.old, options);
+      // const oldValue = formatMappedValue(change.old, options);
       const newValue = formatMappedValue(change.new, options);
       const isUnchanged =
         JSON.stringify(change.old) === JSON.stringify(change.new);
-      return renderFormattedChange(oldValue, newValue, action, isUnchanged);
+      return renderFormattedChange(newValue, action, isUnchanged);
     };
     const renderHistoryChange = (
       change: DepartmentHistoryChange | undefined,
@@ -1512,11 +1511,11 @@ function DepartmentActivity() {
       if (!change) {
         return NA_LABEL;
       }
-      const oldValue = formatHistoryValue(change.old, field);
+      // const oldValue = formatHistoryValue(change.old, field);
       const newValue = formatHistoryValue(change.new, field);
       const isUnchanged =
         JSON.stringify(change.old) === JSON.stringify(change.new);
-      return renderFormattedChange(oldValue, newValue, action, isUnchanged);
+      return renderFormattedChange(newValue, action, isUnchanged);
     };
     const renderParentDepartmentChange = (
       change: DepartmentHistoryChange | undefined,
@@ -1525,11 +1524,11 @@ function DepartmentActivity() {
       if (!change) {
         return NA_LABEL;
       }
-      const oldValue = formatParentDepartment(change.old);
+      // const oldValue = formatParentDepartment(change.old);
       const newValue = formatParentDepartment(change.new);
       const isUnchanged =
         JSON.stringify(change.old) === JSON.stringify(change.new);
-      return renderFormattedChange(oldValue, newValue, action, isUnchanged);
+      return renderFormattedChange(newValue, action, isUnchanged);
     };
     return [
       {
