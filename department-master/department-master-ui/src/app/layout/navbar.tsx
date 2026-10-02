@@ -161,19 +161,34 @@ function Navbar() {
     if (!date) {
       return "-";
     }
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
+    const rawValue = String(date).trim();
+    if (!rawValue) {
       return "-";
     }
-
+    const match = rawValue.match(
+      /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/,
+    );
+    if (!match) {
+      return rawValue;
+    }
+    const [, year, month, day, hour, minute] = match;
+    const parsedDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+    );
+    if (Number.isNaN(parsedDate.getTime())) {
+      return rawValue;
+    }
     return parsedDate.toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
   };
 

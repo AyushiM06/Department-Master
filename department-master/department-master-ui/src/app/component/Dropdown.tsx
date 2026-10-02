@@ -6,9 +6,7 @@ import {
   FormHelperText,
 } from "@mui/material";
 
-import type {
-  SelectChangeEvent,
-} from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
 
 export interface DropdownOption {
   label: string;
@@ -19,9 +17,7 @@ interface DropdownProps {
   label: string;
   name: string;
   value: string | number;
-  onChange: (
-    e: SelectChangeEvent<string>,
-  ) => void;
+  onChange: (e: SelectChangeEvent<string>) => void;
   onBlur?: () => void;
   options: DropdownOption[];
   error?: boolean;
@@ -50,11 +46,7 @@ function Dropdown({
       required={required}
       disabled={disabled}
     >
-      <InputLabel
-        id={`${name}-label`}
-      >
-        {label}
-      </InputLabel>
+      <InputLabel id={`${name}-label`}>{label}</InputLabel>
 
       <Select
         labelId={`${name}-label`}
@@ -84,25 +76,17 @@ function Dropdown({
           <em>Select {label}</em>
         </MenuItem>
 
-        {options.map(
-          (option) => (
-            <MenuItem
-              key={`${name}-${option.value}`}
-              value={String(
-                option.value,
-              )}
-            >
-              {option.label}
-            </MenuItem>
-          ),
-        )}
+        {options.map((option) => (
+          <MenuItem
+            key={`${name}-${option.value}`}
+            value={String(option.value)}
+          >
+            {option.label}
+          </MenuItem>
+        ))}
       </Select>
 
-      {helperText && (
-        <FormHelperText>
-          {helperText}
-        </FormHelperText>
-      )}
+      {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>
   );
 }

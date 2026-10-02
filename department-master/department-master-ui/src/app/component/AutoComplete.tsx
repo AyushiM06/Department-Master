@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  Autocomplete,
-  TextField as MuiTextField,
-} from "@mui/material";
+import { Autocomplete, TextField as MuiTextField } from "@mui/material";
 
 export interface AutoCompleteOption {
   label: string;
@@ -37,9 +34,6 @@ function AutoComplete({
 }: AutoCompleteProps) {
   const [inputValue, setInputValue] = useState("");
 
-  // =====================================================
-  // Sync input text when selected value changes
-  // =====================================================
   useEffect(() => {
     if (value) {
       setInputValue(value.label);
@@ -64,27 +58,17 @@ function AutoComplete({
         const typedValue = params.inputValue.trim();
 
         const filtered = options.filter((option) =>
-          option.label
-            .toLowerCase()
-            .includes(typedValue.toLowerCase()),
+          option.label.toLowerCase().includes(typedValue.toLowerCase()),
         );
 
         const alreadyExists = options.some(
           (option) =>
-            option.label.trim().toLowerCase() ===
-            typedValue.toLowerCase(),
+            option.label.trim().toLowerCase() === typedValue.toLowerCase(),
         );
 
-        // =================================================
-        // CREATE NEW EMPLOYEE OPTION
-        // =================================================
-        if (
-          allowCreate &&
-          typedValue &&
-          !alreadyExists
-        ) {
+        if (allowCreate && typedValue && !alreadyExists) {
           filtered.push({
-            label: `Create "${typedValue}"`,
+            label: typedValue,
             value: typedValue,
             isNew: true,
           });
@@ -93,35 +77,26 @@ function AutoComplete({
         return filtered;
       }}
       onChange={(_event, newValue) => {
-  onChange(newValue);
+        onChange(newValue);
 
-  if (newValue) {
-    setInputValue(newValue.label);
-  } else {
-    setInputValue("");
-  }
-}}
+        if (newValue) {
+          setInputValue(newValue.label);
+        } else {
+          setInputValue("");
+        }
+      }}
       onInputChange={(_event, newInputValue, reason) => {
-        // =================================================
-        // USER IS TYPING
-        // =================================================
         if (reason === "input") {
           setInputValue(newInputValue);
           onInputChange?.(newInputValue);
           return;
         }
 
-        // =================================================
-        // OPTION SELECTED
-        // =================================================
         if (reason === "reset") {
           setInputValue(newInputValue);
           return;
         }
 
-        // =================================================
-        // CLEAR BUTTON
-        // =================================================
         if (reason === "clear") {
           setInputValue("");
           onInputChange?.("");

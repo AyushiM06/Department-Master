@@ -23,10 +23,11 @@ import {
 
 interface SidebarProps {
   open: boolean;
+  mobile: boolean;
   onToggle: () => void;
 }
 
-function Sidebar({ open, onToggle }: SidebarProps) {
+function Sidebar({ open, mobile, onToggle }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -75,14 +76,13 @@ function Sidebar({ open, onToggle }: SidebarProps) {
   return (
     <Box
       sx={{
-        width: open ? 230 : 70,
+        width: mobile ? 0 : open ? 230 : 70,
         flexShrink: 0,
-        transition: "width 0.3s ease",
       }}
     >
       <Box
         sx={{
-          width: open ? 230 : 70,
+          width: mobile ? 230 : open ? 230 : 70,
           position: "fixed",
           top: 0,
           left: 0,
@@ -90,7 +90,8 @@ function Sidebar({ open, onToggle }: SidebarProps) {
           pt: 8,
           backgroundColor: "#163B3A",
           borderRight: "1px solid #285654",
-          transition: "width 0.3s ease",
+          transform: mobile && !open ? "translateX(-100%)" : "translateX(0)",
+          transition: "width 0.3s ease, transform 0.3s ease",
           overflow: "hidden",
           zIndex: 1000,
         }}

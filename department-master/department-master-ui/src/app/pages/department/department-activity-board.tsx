@@ -253,9 +253,24 @@ const getCurrentUserRole = (): UserRole | null => {
 };
 const formatDate = (value?: string | null) => {
   if (!value) return "NA";
-  const date = new Date(value);
+  const rawValue = String(value).trim();
+  if (!rawValue) return "NA";
+  const match = rawValue.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/,
+  );
+  if (!match) {
+    return rawValue;
+  }
+  const [, year, month, day, hour, minute] = match;
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+  );
   if (Number.isNaN(date.getTime())) {
-    return value;
+    return rawValue;
   }
   return date.toLocaleString("en-IN", {
     day: "2-digit",
@@ -291,9 +306,25 @@ const FilterChip = ({
     onDelete={onDelete}
     sx={{
       ...CHIP,
+      maxWidth: "100%",
+      height: "auto",
+      minHeight: 28,
       color,
       backgroundColor: background,
-      "& .MuiChip-deleteIcon": { color, fontSize: 18, "&:hover": { color } },
+      "& .MuiChip-label": {
+        display: "block",
+        whiteSpace: "normal",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
+        px: 1,
+        py: 0.5,
+      },
+      "& .MuiChip-deleteIcon": {
+        color,
+        fontSize: 18,
+        flexShrink: 0,
+        "&:hover": { color },
+      },
     }}
   />
 );
@@ -1412,78 +1443,78 @@ function DepartmentActivity() {
       return parentDepartment?.label ?? "NA";
     };
     const renderFormattedChange = (
-  newValue: string,
-  action: string,
-  isUnchanged: boolean,
-) => {
-  if (action === "CREATED") {
-    return (
-      <Typography
-        sx={{
-          fontSize: 13,
-          color: "#15803D",
-          fontWeight: 600,
-        }}
-      >
-        {newValue}
-      </Typography>
-    );
-  }
+      newValue: string,
+      action: string,
+      isUnchanged: boolean,
+    ) => {
+      if (action === "CREATED") {
+        return (
+          <Typography
+            sx={{
+              fontSize: 13,
+              color: "#15803D",
+              fontWeight: 600,
+            }}
+          >
+            {newValue}
+          </Typography>
+        );
+      }
 
-  if (isUnchanged) {
-    return (
-      <Typography
-        sx={{
-          fontSize: 13,
-          color: "#334155",
-          fontWeight: 500,
-        }}
-      >
-        {newValue}
-      </Typography>
-    );
-  }
+      if (isUnchanged) {
+        return (
+          <Typography
+            sx={{
+              fontSize: 13,
+              color: "#334155",
+              fontWeight: 500,
+            }}
+          >
+            {newValue}
+          </Typography>
+        );
+      }
 
-  if (action === "UPDATED") {
-    return (
-      <Typography
-        sx={{
-          fontSize: 13,
-          color: "#15803D",
-          fontWeight: 600,
-        }}
-      >
-        {newValue}
-      </Typography>
-    );
-  }
+      if (action === "UPDATED") {
+        return (
+          <Typography
+            sx={{
+              fontSize: 13,
+              color: "#15803D",
+              fontWeight: 600,
+            }}
+          >
+            {newValue}
+          </Typography>
+        );
+      }
 
-  if (action === "INACTIVATED") {
-    return (
-      <Typography
-        sx={{
-          fontSize: 13,
-          color: "#DC2626",
-          fontWeight: 600,
-        }}
-      >
-        {newValue}
-      </Typography>
-    );
-  }
+      if (action === "INACTIVATED") {
+        return (
+          <Typography
+            sx={{
+              fontSize: 13,
+              color: "#DC2626",
+              fontWeight: 600,
+            }}
+          >
+            {newValue}
+          </Typography>
+        );
+      }
 
-  return (
-    <Typography
-      sx={{
-        fontSize: 13,
-        color: "#334155",
-        fontWeight: 500,
-      }}
-    >
-      {newValue}
-    </Typography>
-  );
-};
+      return (
+        <Typography
+          sx={{
+            fontSize: 13,
+            color: "#334155",
+            fontWeight: 500,
+          }}
+        >
+          {newValue}
+        </Typography>
+      );
+    };
     const NA_LABEL = (
       <Typography sx={{ fontSize: 13, color: "#94A3B8", fontWeight: 500 }}>
         NA
@@ -1497,7 +1528,6 @@ function DepartmentActivity() {
       if (!change) {
         return NA_LABEL;
       }
-      // const oldValue = formatMappedValue(change.old, options);
       const newValue = formatMappedValue(change.new, options);
       const isUnchanged =
         JSON.stringify(change.old) === JSON.stringify(change.new);
@@ -1511,7 +1541,6 @@ function DepartmentActivity() {
       if (!change) {
         return NA_LABEL;
       }
-      // const oldValue = formatHistoryValue(change.old, field);
       const newValue = formatHistoryValue(change.new, field);
       const isUnchanged =
         JSON.stringify(change.old) === JSON.stringify(change.new);
@@ -1524,7 +1553,6 @@ function DepartmentActivity() {
       if (!change) {
         return NA_LABEL;
       }
-      // const oldValue = formatParentDepartment(change.old);
       const newValue = formatParentDepartment(change.new);
       const isUnchanged =
         JSON.stringify(change.old) === JSON.stringify(change.new);
@@ -1947,11 +1975,16 @@ function DepartmentActivity() {
             <Box
               sx={{
                 mb: 2,
-                p: 1.5,
+                p: { xs: 1, sm: 1.5 },
                 display: "flex",
-                alignItems: "center",
+                alignItems: { xs: "flex-start", sm: "center" },
                 gap: 1,
                 flexWrap: "wrap",
+                width: "100%",
+                maxWidth: "100%",
+                minWidth: 0,
+                boxSizing: "border-box",
+                overflow: "hidden",
                 border: `1px solid ${THEME.border}`,
                 borderRadius: 2,
               }}
@@ -1967,7 +2000,15 @@ function DepartmentActivity() {
                 Filter By:
               </Typography>
               <Box
-                sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", flex: 1 }}
+                sx={{
+                  display: "flex",
+                  gap: 0.75,
+                  flexWrap: "wrap",
+                  flex: 1,
+                  minWidth: 0,
+                  width: "100%",
+                  overflow: "hidden",
+                }}
               >
                 {(fromDate || toDate) && (
                   <FilterChip

@@ -1,13 +1,7 @@
 import { useRef } from "react";
 import Swal from "sweetalert2";
 
-import {
-  Box,
-  Button,
-  Typography,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Box, Button, Typography, IconButton, Tooltip } from "@mui/material";
 
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import CloseIcon from "@mui/icons-material/Close";
@@ -17,17 +11,10 @@ interface AttachmentProps {
   label: string;
   file: File | null;
 
-  // Existing uploaded file
   existingFileName?: string | null;
-existingFileUuid?: string | null;
-onDownloadExisting?: (
-  uuid: string,
-  fileName: string,
-) => void;
-onRemoveExisting?: (
-  uuid: string,
-  fileName: string,
-) => void;
+  existingFileUuid?: string | null;
+  onDownloadExisting?: (uuid: string, fileName: string) => void;
+  onRemoveExisting?: (uuid: string, fileName: string) => void;
 
   onChange: (file: File | null) => void;
   allowedTypes: string[];
@@ -53,10 +40,7 @@ function Attachment({
 }: AttachmentProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const showValidationAlert = (
-    title: string,
-    text: string,
-  ) => {
+  const showValidationAlert = (title: string, text: string) => {
     Swal.fire({
       icon: "error",
       title,
@@ -84,9 +68,7 @@ function Attachment({
     });
   };
 
-  const handleFileSelect = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
 
     if (!selectedFile) {
@@ -104,8 +86,7 @@ function Attachment({
       return;
     }
 
-    const sizeInMB =
-      selectedFile.size / (1024 * 1024);
+    const sizeInMB = selectedFile.size / (1024 * 1024);
 
     if (sizeInMB > maxSizeMB) {
       showValidationAlert(
@@ -135,9 +116,7 @@ function Attachment({
 
   const hasNewFile = Boolean(file);
 
-  const hasExistingFile =
-    !hasNewFile &&
-    Boolean(existingFileName);
+  const hasExistingFile = !hasNewFile && Boolean(existingFileName);
 
   return (
     <Box>
@@ -146,15 +125,12 @@ function Attachment({
         sx={{
           fontSize: 14,
           mb: 0.5,
-          color: error
-            ? "error.main"
-            : "text.secondary",
+          color: error ? "error.main" : "text.secondary",
         }}
       >
         {label}
       </Typography>
 
-      {/* Hidden input */}
       <input
         ref={inputRef}
         type="file"
@@ -164,9 +140,6 @@ function Attachment({
         disabled={disabled}
       />
 
-      {/* =====================================================
-          NEW FILE SELECTED
-      ====================================================== */}
       {hasNewFile && file && (
         <Box
           sx={{
@@ -213,134 +186,110 @@ function Attachment({
         </Box>
       )}
 
-      {/* =====================================================
-          EXISTING FILE
-      ====================================================== */}
       {hasExistingFile && (
-  <Box
-    sx={{
-      display: "flex",
-      alignItems: "center",
-      gap: 1,
-      border: "1px solid #D7E6E3",
-      backgroundColor: "#F8FAFA",
-      borderRadius: 1.5,
-      px: 1.5,
-      py: 0.7,
-      width: "fit-content",
-      maxWidth: "100%",
-    }}
-  >
-    <UploadFileIcon
-      sx={{
-        fontSize: 20,
-        color: "#0F766E",
-      }}
-    />
-
-    <Typography
-      sx={{
-        fontSize: 13,
-        maxWidth: 220,
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {existingFileName}
-    </Typography>
-
-    {/* DOWNLOAD */}
-    {existingFileUuid &&
-      onDownloadExisting && (
-        <Tooltip title="Download existing file">
-          <IconButton
-            size="small"
-            onClick={() =>
-              onDownloadExisting(
-                existingFileUuid,
-                existingFileName!,
-              )
-            }
-            disabled={disabled}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            border: "1px solid #D7E6E3",
+            backgroundColor: "#F8FAFA",
+            borderRadius: 1.5,
+            px: 1.5,
+            py: 0.7,
+            width: "fit-content",
+            maxWidth: "100%",
+          }}
+        >
+          <UploadFileIcon
             sx={{
+              fontSize: 20,
               color: "#0F766E",
             }}
+          />
+
+          <Typography
+            sx={{
+              fontSize: 13,
+              maxWidth: 220,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
           >
-            <DownloadIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+            {existingFileName}
+          </Typography>
+
+          {existingFileUuid && onDownloadExisting && (
+            <Tooltip title="Download existing file">
+              <IconButton
+                size="small"
+                onClick={() =>
+                  onDownloadExisting(existingFileUuid, existingFileName!)
+                }
+                disabled={disabled}
+                sx={{
+                  color: "#0F766E",
+                }}
+              >
+                <DownloadIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+
+          <Tooltip title="Replace file">
+            <IconButton
+              size="small"
+              onClick={() => inputRef.current?.click()}
+              disabled={disabled}
+              sx={{
+                color: "#0F766E",
+              }}
+            >
+              <UploadFileIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          {existingFileUuid && onRemoveExisting && (
+            <Tooltip title="Remove existing file">
+              <IconButton
+                size="small"
+                onClick={() =>
+                  onRemoveExisting(existingFileUuid, existingFileName!)
+                }
+                disabled={disabled}
+                sx={{
+                  color: "#DC2626",
+                  "&:hover": {
+                    backgroundColor: "#FEF2F2",
+                  },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       )}
 
-    {/* REPLACE */}
-    <Tooltip title="Replace file">
-      <IconButton
-        size="small"
-        onClick={() =>
-          inputRef.current?.click()
-        }
-        disabled={disabled}
-        sx={{
-          color: "#0F766E",
-        }}
-      >
-        <UploadFileIcon fontSize="small" />
-      </IconButton>
-    </Tooltip>
-
-    {/* REMOVE */}
-    {/* REMOVE EXISTING FILE */}
-{existingFileUuid && onRemoveExisting && (
-  <Tooltip title="Remove existing file">
-    <IconButton
-      size="small"
-      onClick={() =>
-        onRemoveExisting(
-          existingFileUuid,
-          existingFileName!,
-        )
-      }
-      disabled={disabled}
-      sx={{
-        color: "#DC2626",
-        "&:hover": {
-          backgroundColor: "#FEF2F2",
-        },
-      }}
-    >
-      <CloseIcon fontSize="small" />
-    </IconButton>
-  </Tooltip>
-)}
-  </Box>
-)}
-
-      {/* =====================================================
-          NO FILE
-      ====================================================== */}
       {!hasNewFile && !hasExistingFile && (
         <Button
           variant="outlined"
           size="small"
           startIcon={<UploadFileIcon />}
-          onClick={() =>
-            inputRef.current?.click()
-          }
+          onClick={() => inputRef.current?.click()}
           disabled={disabled}
         >
           Choose File
         </Button>
       )}
 
-      {/* Helper text */}
       {helperText && (
         <Typography
           sx={{
             fontSize: 12,
             mt: 0.5,
-            color: error
-              ? "error.main"
-              : "text.secondary",
+            color: error ? "error.main" : "text.secondary",
           }}
         >
           {helperText}

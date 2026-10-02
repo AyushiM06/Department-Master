@@ -187,12 +187,9 @@ export const fetchDepartmentDropdownData = createAsyncThunk(
   async (_unused: void, { rejectWithValue }) => {
     departmentDropdownRequestInFlight = true;
     try {
-      console.log("🔥 DROPDOWN API CALLING...");
       const response = await getDepartmentDropdownData();
-      console.log("✅ DEPARTMENT DROPDOWN API RESPONSE:", response);
       return response;
     } catch (error: any) {
-      console.error("❌ FETCH DEPARTMENT DROPDOWN ERROR:", error);
       return rejectWithValue(
         error?.response?.data?.message ||
           error?.response?.data?.error ||
@@ -208,13 +205,9 @@ export const fetchDepartmentDropdownData = createAsyncThunk(
       const state = getState() as { department: DepartmentState };
       const department = state.department;
       if (department.dropdownLoaded) {
-        console.log("⛔ DROPDOWN ALREADY LOADED - API CALL SKIPPED");
         return false;
       }
       if (department.dropdownLoading || departmentDropdownRequestInFlight) {
-        console.log(
-          "⛔ DROPDOWN REQUEST ALREADY IN PROGRESS - API CALL SKIPPED",
-        );
         return false;
       }
       return true;

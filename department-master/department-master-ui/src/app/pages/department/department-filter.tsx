@@ -1,6 +1,16 @@
 import { useState } from "react";
 import type React from "react";
+
 import CloseIcon from "@mui/icons-material/Close";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import SearchIcon from "@mui/icons-material/Search";
+import BusinessIcon from "@mui/icons-material/Business";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+
 import {
   Box,
   Button,
@@ -16,17 +26,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import SearchIcon from "@mui/icons-material/Search";
-import BusinessIcon from "@mui/icons-material/Business";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
+
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+
 import dayjs, { type Dayjs } from "dayjs";
+
 import Dropdown from "../../component/Dropdown";
 import MultiSelect from "../../component/MultiSelect";
 
@@ -50,30 +56,41 @@ interface DepartmentFiltersProps {
   onSearchChange: (value: string) => void;
   isSearchApplied: boolean;
   onSearchClick: () => void;
+
   departmentType: string;
   onDepartmentTypeChange: (value: string) => void;
+
   branches: number[];
   onBranchesChange: (value: number[]) => void;
+
   businessUnit: string;
   onBusinessUnitChange: (value: string) => void;
+
   status: boolean | "";
   onStatusChange: (value: boolean | "") => void;
+
   fromDate: string;
   toDate: string;
   onFromDateChange: (value: string) => void;
   onToDateChange: (value: string) => void;
+
   onApply: () => void;
   onReset: () => void;
+
   totalCount: number;
   activeCount: number;
   inactiveCount: number;
+
   departmentFilter: "all" | "active" | "inactive";
   onTileClick: (filter: "all" | "active" | "inactive") => void;
+
   dateMode: "DATE_FILTER" | "SINCE_BEGINNING";
   onDateModeChange: (mode: "DATE_FILTER" | "SINCE_BEGINNING") => void;
+
   departmentTypeOptions: FilterOption[];
   branchOptions: FilterOption[];
   businessUnitOptions: FilterOption[];
+
   dropdownLoading: boolean;
 }
 
@@ -98,6 +115,7 @@ const TILE_COLORS = {
     selectedBorder: "#5EEAD4",
     selectedShadow: "rgba(15, 118, 110, 0.35)",
   },
+
   active: {
     background: "#14532D",
     hoverBackground: "#166534",
@@ -109,6 +127,7 @@ const TILE_COLORS = {
     selectedBorder: "#4ADE80",
     selectedShadow: "rgba(22, 163, 74, 0.35)",
   },
+
   inactive: {
     background: "#7F1D1D",
     hoverBackground: "#991B1B",
@@ -131,6 +150,7 @@ export function DepartmentStatTile({
   type,
 }: StatTileProps) {
   const colors = TILE_COLORS[type];
+
   return (
     <Card
       onClick={onClick}
@@ -138,21 +158,31 @@ export function DepartmentStatTile({
         width: "100%",
         height: { xs: 110, sm: 125 },
         minHeight: 0,
+        minWidth: 0,
         boxSizing: "border-box",
+
         borderRadius: 3,
+
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+
         backgroundColor: colors.background,
+
         border: `1px solid ${colors.border}`,
+
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
+
         cursor: "pointer",
+
         transition:
           "transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
+
         ...(selected && {
           border: `2px solid ${colors.selectedBorder}`,
           boxShadow: `0 7px 20px ${colors.selectedShadow}`,
         }),
+
         "&:hover": {
           transform: "translateY(-4px)",
           backgroundColor: colors.hoverBackground,
@@ -164,32 +194,48 @@ export function DepartmentStatTile({
       <Box
         sx={{
           width: "100%",
+          minWidth: 0,
+
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+
           textAlign: "center",
+
           gap: 0.7,
+
           px: 1,
+
+          boxSizing: "border-box",
         }}
       >
         <Box
           sx={{
             width: { xs: 38, sm: 44 },
             height: { xs: 38, sm: 44 },
+
             borderRadius: 2.5,
+
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+
             backgroundColor: colors.iconBackground,
             color: colors.iconColor,
+
             flexShrink: 0,
+
             boxShadow: "0 3px 8px rgba(0, 0, 0, 0.18)",
-            "& svg": { fontSize: { xs: 20, sm: 23 } },
+
+            "& svg": {
+              fontSize: { xs: 20, sm: 23 },
+            },
           }}
         >
           {icon}
         </Box>
+
         <Typography
           sx={{
             fontSize: { xs: 11, sm: 12 },
@@ -198,10 +244,12 @@ export function DepartmentStatTile({
             textAlign: "center",
             lineHeight: 1.2,
             letterSpacing: "0.2px",
+            maxWidth: "100%",
           }}
         >
           {label}
         </Typography>
+
         <Typography
           sx={{
             fontSize: { xs: 23, sm: 26 },
@@ -224,50 +272,76 @@ function DepartmentFilters({
   onSearchChange,
   isSearchApplied,
   onSearchClick,
+
   departmentType,
   onDepartmentTypeChange,
+
   branches,
   onBranchesChange,
+
   businessUnit,
   onBusinessUnitChange,
+
   status,
   onStatusChange,
+
   fromDate,
   toDate,
   onFromDateChange,
   onToDateChange,
+
   onApply,
   onReset,
+
   totalCount,
   activeCount,
   inactiveCount,
+
   departmentFilter,
   onTileClick,
+
   dateMode,
   onDateModeChange,
+
   departmentTypeOptions,
   branchOptions,
   businessUnitOptions,
+
   dropdownLoading,
 }: DepartmentFiltersProps) {
   const [showMoreFilters, setShowMoreFilters] = useState(false);
+
   const [fromDateValue, setFromDateValue] = useState<Dayjs | null>(
     fromDate ? dayjs(fromDate) : dayjs().subtract(6, "day"),
   );
+
   const [toDateValue, setToDateValue] = useState<Dayjs | null>(
     toDate ? dayjs(toDate) : dayjs(),
   );
+
   const [fromDateError, setFromDateError] = useState("");
+
   const [toDateError, setToDateError] = useState("");
 
   const fieldSx = {
+    width: "100%",
+
     "& .MuiOutlinedInput-root": {
       borderRadius: 2,
       backgroundColor: THEME.white,
-      "&:hover fieldset": { borderColor: THEME.primary },
-      "&.Mui-focused fieldset": { borderColor: THEME.primary },
+
+      "&:hover fieldset": {
+        borderColor: THEME.primary,
+      },
+
+      "&.Mui-focused fieldset": {
+        borderColor: THEME.primary,
+      },
     },
-    "& .MuiInputLabel-root.Mui-focused": { color: THEME.primary },
+
+    "& .MuiInputLabel-root.Mui-focused": {
+      color: THEME.primary,
+    },
   };
 
   const formatDate = (date: Dayjs | null) =>
@@ -275,48 +349,59 @@ function DepartmentFilters({
 
   const handleFromDateChange = (value: Dayjs | null) => {
     setFromDateValue(value);
+
     if (!value) {
       setFromDateError("");
       onFromDateChange("");
       return;
     }
+
     if (!value.isValid()) {
       setFromDateError("Please enter a valid date.");
       onFromDateChange("");
       return;
     }
+
     if (toDateValue && value.isAfter(toDateValue, "day")) {
       setFromDateError("From date cannot be after To date.");
       onFromDateChange("");
       return;
     }
+
     setFromDateError("");
     onFromDateChange(formatDate(value));
   };
 
   const handleToDateChange = (value: Dayjs | null) => {
     setToDateValue(value);
+
     if (!value) {
       setToDateError("");
       onToDateChange("");
       return;
     }
+
     if (!value.isValid()) {
       setToDateError("Please enter a valid date.");
       onToDateChange("");
       return;
     }
+
     if (fromDateValue && value.isBefore(fromDateValue, "day")) {
       setToDateError("To date cannot be before From date.");
       onToDateChange("");
       return;
     }
+
     setToDateError("");
     onToDateChange(formatDate(value));
   };
 
   const handleApply = () => {
-    if (fromDateError || toDateError) return;
+    if (fromDateError || toDateError) {
+      return;
+    }
+
     setShowMoreFilters(false);
     onApply();
   };
@@ -324,13 +409,19 @@ function DepartmentFilters({
   const handleReset = () => {
     const today = dayjs();
     const oneWeekAgo = today.subtract(6, "day");
+
     setFromDateValue(oneWeekAgo);
     setToDateValue(today);
+
     setFromDateError("");
     setToDateError("");
+
     setShowMoreFilters(false);
+
     onFromDateChange(oneWeekAgo.format("YYYY-MM-DD"));
+
     onToDateChange(today.format("YYYY-MM-DD"));
+
     onReset();
   };
 
@@ -341,51 +432,118 @@ function DepartmentFilters({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Grid container spacing={3} sx={{ width: "100%", minWidth: 0 }}>
-        <Grid size={{ xs: 12, lg: 6 }} sx={{ minWidth: 0 }}>
+      <Grid
+        container
+        spacing={{ xs: 2, sm: 3 }}
+        sx={{
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          boxSizing: "border-box",
+          overflow: "hidden",
+        }}
+      >
+        <Grid
+          size={{ xs: 12, lg: 6 }}
+          sx={{
+            minWidth: 0,
+            width: "100%",
+          }}
+        >
           <Box
             sx={{
               width: "100%",
+              maxWidth: "100%",
               height: "100%",
+
               boxSizing: "border-box",
+
               borderRadius: 3,
-              p: { xs: 2, sm: 2.5, md: 3 },
+
+              p: {
+                xs: 1.5,
+                sm: 2.5,
+                md: 3,
+              },
+
               border: `1px solid ${THEME.border}`,
+
               backgroundColor: THEME.white,
+
+              overflow: "hidden",
             }}
           >
             <Box
-              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.5 }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                mb: 2.5,
+
+                minWidth: 0,
+              }}
             >
               <Box
                 sx={{
                   width: 36,
                   height: 36,
+                  minWidth: 36,
+
                   borderRadius: 2,
+
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+
                   backgroundColor: THEME.primaryLight,
+
                   color: THEME.primary,
                 }}
               >
                 <FilterAltIcon fontSize="small" />
               </Box>
-              <Box>
+
+              <Box
+                sx={{
+                  minWidth: 0,
+                }}
+              >
                 <Typography
-                  sx={{ fontWeight: 800, color: THEME.darkTeal, fontSize: 16 }}
+                  sx={{
+                    fontWeight: 800,
+                    color: THEME.darkTeal,
+                    fontSize: 16,
+                  }}
                 >
                   Search Filters
                 </Typography>
+
                 <Typography
-                  sx={{ fontSize: 12, color: THEME.textSecondary, mt: 0.2 }}
+                  sx={{
+                    fontSize: 12,
+                    color: THEME.textSecondary,
+                    mt: 0.2,
+                  }}
                 >
                   Search and filter departments
                 </Typography>
               </Box>
             </Box>
-            <Grid container spacing={2}>
-              <Grid size={12}>
+            <Grid
+              container
+              spacing={2}
+              sx={{
+                width: "100%",
+                maxWidth: "100%",
+                minWidth: 0,
+              }}
+            >
+              <Grid
+                size={12}
+                sx={{
+                  minWidth: 0,
+                }}
+              >
                 <TextField
                   fullWidth
                   size="small"
@@ -405,6 +563,7 @@ function DepartmentFilters({
                               height: 36,
                               borderRadius: 2,
                               color: THEME.primary,
+
                               "&:hover": {
                                 backgroundColor: THEME.primaryLight,
                               },
@@ -423,7 +582,8 @@ function DepartmentFilters({
                   sx={fieldSx}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+
+              <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
                 <DatePicker
                   label="Created From"
                   value={fromDateValue}
@@ -441,7 +601,8 @@ function DepartmentFilters({
                   }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
+
+              <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
                 <DatePicker
                   label="Created To"
                   value={toDateValue}
@@ -461,10 +622,18 @@ function DepartmentFilters({
                 />
               </Grid>
             </Grid>
-
             {showMoreFilters && (
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <Grid size={{ xs: 12, md: 6 }}>
+              <Grid
+                container
+                spacing={2}
+                sx={{
+                  mt: 0.5,
+                  width: "100%",
+                  maxWidth: "100%",
+                  minWidth: 0,
+                }}
+              >
+                <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
                   <Dropdown
                     label="Department Type"
                     name="departmentType"
@@ -476,7 +645,8 @@ function DepartmentFilters({
                     disabled={dropdownLoading}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+
+                <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
                   <MultiSelect
                     label="Branch"
                     name="branches"
@@ -484,6 +654,7 @@ function DepartmentFilters({
                     value={branches}
                     onChange={(event) => {
                       const value = event.target.value;
+
                       onBranchesChange(
                         Array.isArray(value)
                           ? value.map(Number)
@@ -496,7 +667,8 @@ function DepartmentFilters({
                     disabled={dropdownLoading}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
+
+                <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
                   <Dropdown
                     label="Business Unit"
                     name="businessUnit"
@@ -508,26 +680,45 @@ function DepartmentFilters({
                     disabled={dropdownLoading}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <FormControl>
+
+                <Grid size={{ xs: 12, md: 6 }} sx={{ minWidth: 0 }}>
+                  <FormControl
+                    sx={{
+                      width: "100%",
+                    }}
+                  >
                     <FormLabel
-                      sx={{ fontSize: 12, color: THEME.textSecondary, mb: 0.5 }}
+                      sx={{
+                        fontSize: 12,
+                        color: THEME.textSecondary,
+                        mb: 0.5,
+                      }}
                     >
                       Status
                     </FormLabel>
+
                     <RadioGroup
                       row
                       value={status === "" ? "" : String(status)}
                       onChange={(event) => {
                         const value = event.target.value;
+
                         onStatusChange(value === "" ? "" : value === "true");
                       }}
                       sx={{
+                        flexWrap: "wrap",
+
                         "& .MuiRadio-root": {
                           color: "#94A3B8",
-                          "&.Mui-checked": { color: THEME.primary },
+
+                          "&.Mui-checked": {
+                            color: THEME.primary,
+                          },
                         },
-                        "& .MuiFormControlLabel-label": { fontSize: 13 },
+
+                        "& .MuiFormControlLabel-label": {
+                          fontSize: 13,
+                        },
                       }}
                     >
                       <FormControlLabel
@@ -535,6 +726,7 @@ function DepartmentFilters({
                         control={<Radio size="small" />}
                         label="Active"
                       />
+
                       <FormControlLabel
                         value="true"
                         control={<Radio size="small" />}
@@ -545,67 +737,132 @@ function DepartmentFilters({
                 </Grid>
               </Grid>
             )}
-
             <Box
               sx={{
                 display: "flex",
-                alignItems: "center",
+                alignItems: "stretch",
                 justifyContent: "center",
+
+                flexDirection: {
+                  xs: "column",
+                  sm: "row",
+                },
+
                 gap: 1.5,
+
                 mt: 2.5,
-                flexWrap: "wrap",
+
+                width: "100%",
+                maxWidth: "100%",
+                boxSizing: "border-box",
               }}
             >
               <Button
+                fullWidth
                 variant="contained"
                 startIcon={<FilterAltIcon />}
                 onClick={handleApply}
                 disabled={Boolean(fromDateError || toDateError)}
                 sx={{
-                  minWidth: 160,
+                  width: {
+                    xs: "100%",
+                    sm: "auto",
+                  },
+
+                  minWidth: {
+                    xs: 0,
+                    sm: 160,
+                  },
+
+                  maxWidth: "100%",
+
                   backgroundColor: THEME.primary,
+
                   borderRadius: 2,
+
                   fontWeight: 700,
+
                   textTransform: "none",
-                  "&:hover": { backgroundColor: THEME.primaryHover },
+
+                  "&:hover": {
+                    backgroundColor: THEME.primaryHover,
+                  },
                 }}
               >
                 Apply Filters
               </Button>
+
               <Button
+                fullWidth
                 variant="outlined"
                 startIcon={
                   showMoreFilters ? <ExpandLessIcon /> : <ExpandMoreIcon />
                 }
                 onClick={() => setShowMoreFilters((value) => !value)}
                 sx={{
-                  minWidth: 160,
+                  width: {
+                    xs: "100%",
+                    sm: "auto",
+                  },
+
+                  minWidth: {
+                    xs: 0,
+                    sm: 160,
+                  },
+
+                  maxWidth: "100%",
+
                   color: THEME.primary,
+
                   borderColor: THEME.primary,
+
                   borderRadius: 2,
+
                   fontWeight: 700,
+
                   textTransform: "none",
+
                   "&:hover": {
                     borderColor: THEME.primaryHover,
+
                     backgroundColor: THEME.primaryLight,
                   },
                 }}
               >
                 {showMoreFilters ? "Hide Filters" : "More Filters"}
               </Button>
+
               <Button
+                fullWidth
                 variant="outlined"
                 startIcon={<RestartAltIcon />}
                 onClick={handleReset}
                 sx={{
-                  minWidth: 120,
+                  width: {
+                    xs: "100%",
+                    sm: "auto",
+                  },
+
+                  minWidth: {
+                    xs: 0,
+                    sm: 120,
+                  },
+
+                  maxWidth: "100%",
+
                   color: THEME.primary,
+
                   borderColor: THEME.primary,
+
                   borderRadius: 2,
+
                   fontWeight: 700,
+
                   textTransform: "none",
+
                   "&:hover": {
                     borderColor: THEME.primaryHover,
+
                     backgroundColor: THEME.primaryLight,
                   },
                 }}
@@ -616,102 +873,193 @@ function DepartmentFilters({
           </Box>
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 6 }} sx={{ minWidth: 0 }}>
+        <Grid
+          size={{ xs: 12, lg: 6 }}
+          sx={{
+            minWidth: 0,
+            width: "100%",
+          }}
+        >
           <Grid
             container
             spacing={2}
-            sx={{ width: "100%", height: "100%", minWidth: 0 }}
+            sx={{
+              width: "100%",
+              maxWidth: "100%",
+              height: "100%",
+              minWidth: 0,
+              boxSizing: "border-box",
+            }}
           >
-            <Box
+            {/* DATE MODE */}
+            <Grid
+              size={12}
               sx={{
                 width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                gap: 1,
-                mb: 1.8,
+                minWidth: 0,
               }}
             >
               <Box
-                onClick={() => onDateModeChange("DATE_FILTER")}
                 sx={{
-                  height: 34,
-                  minWidth: 136,
-                  px: 2,
-                  borderRadius: 2,
-                  cursor: "pointer",
+                  width: "100%",
+                  maxWidth: "100%",
+
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border:
-                    dateMode === "DATE_FILTER"
-                      ? `1px solid ${THEME.primary}`
-                      : `1px solid ${THEME.border}`,
-                  backgroundColor:
-                    dateMode === "DATE_FILTER" ? THEME.primary : THEME.white,
-                  color:
-                    dateMode === "DATE_FILTER"
-                      ? THEME.white
-                      : THEME.textSecondary,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  whiteSpace: "nowrap",
-                  boxShadow:
-                    dateMode === "DATE_FILTER"
-                      ? "0 3px 8px rgba(15, 118, 110, 0.25)"
-                      : "none",
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    backgroundColor: THEME.primaryHover,
-                    color: THEME.white,
-                    borderColor: THEME.primaryHover,
+
+                  flexDirection: {
+                    xs: "column",
+                    sm: "row",
                   },
+
+                  justifyContent: "center",
+                  alignItems: "stretch",
+
+                  gap: 1,
+
+                  mb: {
+                    xs: 1.5,
+                    sm: 1.8,
+                  },
+
+                  boxSizing: "border-box",
                 }}
               >
-                As Per Date Filter
+                <Box
+                  onClick={() => onDateModeChange("DATE_FILTER")}
+                  sx={{
+                    width: {
+                      xs: "100%",
+                      sm: "auto",
+                    },
+
+                    minWidth: 0,
+
+                    height: 34,
+
+                    px: {
+                      xs: 1,
+                      sm: 2,
+                    },
+
+                    borderRadius: 2,
+
+                    cursor: "pointer",
+
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+
+                    border:
+                      dateMode === "DATE_FILTER"
+                        ? `1px solid ${THEME.primary}`
+                        : `1px solid ${THEME.border}`,
+
+                    backgroundColor:
+                      dateMode === "DATE_FILTER" ? THEME.primary : THEME.white,
+
+                    color:
+                      dateMode === "DATE_FILTER"
+                        ? THEME.white
+                        : THEME.textSecondary,
+
+                    fontWeight: 700,
+
+                    fontSize: {
+                      xs: 13,
+                      sm: 15,
+                    },
+
+                    whiteSpace: "nowrap",
+
+                    boxSizing: "border-box",
+
+                    boxShadow:
+                      dateMode === "DATE_FILTER"
+                        ? "0 3px 8px rgba(15, 118, 110, 0.25)"
+                        : "none",
+
+                    transition: "all 0.2s ease",
+
+                    "&:hover": {
+                      backgroundColor: THEME.primaryHover,
+                      color: THEME.white,
+                      borderColor: THEME.primaryHover,
+                    },
+                  }}
+                >
+                  As Per Date Filter
+                </Box>
+
+                <Box
+                  onClick={() => onDateModeChange("SINCE_BEGINNING")}
+                  sx={{
+                    width: {
+                      xs: "100%",
+                      sm: "auto",
+                    },
+
+                    minWidth: 0,
+
+                    height: 34,
+
+                    px: {
+                      xs: 1,
+                      sm: 2,
+                    },
+
+                    borderRadius: 2,
+
+                    cursor: "pointer",
+
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+
+                    border:
+                      dateMode === "SINCE_BEGINNING"
+                        ? `1px solid ${THEME.primary}`
+                        : `1px solid ${THEME.border}`,
+
+                    backgroundColor:
+                      dateMode === "SINCE_BEGINNING"
+                        ? THEME.primary
+                        : THEME.white,
+
+                    color:
+                      dateMode === "SINCE_BEGINNING"
+                        ? THEME.white
+                        : THEME.textSecondary,
+
+                    fontWeight: 700,
+
+                    fontSize: {
+                      xs: 13,
+                      sm: 15,
+                    },
+
+                    whiteSpace: "nowrap",
+
+                    boxSizing: "border-box",
+
+                    boxShadow:
+                      dateMode === "SINCE_BEGINNING"
+                        ? "0 3px 8px rgba(15, 118, 110, 0.25)"
+                        : "none",
+
+                    transition: "all 0.2s ease",
+
+                    "&:hover": {
+                      backgroundColor: THEME.primaryHover,
+                      color: THEME.white,
+                      borderColor: THEME.primaryHover,
+                    },
+                  }}
+                >
+                  Since Beginning
+                </Box>
               </Box>
-              <Box
-                onClick={() => onDateModeChange("SINCE_BEGINNING")}
-                sx={{
-                  height: 34,
-                  minWidth: 124,
-                  px: 2,
-                  borderRadius: 2,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border:
-                    dateMode === "SINCE_BEGINNING"
-                      ? `1px solid ${THEME.primary}`
-                      : `1px solid ${THEME.border}`,
-                  backgroundColor:
-                    dateMode === "SINCE_BEGINNING"
-                      ? THEME.primary
-                      : THEME.white,
-                  color:
-                    dateMode === "SINCE_BEGINNING"
-                      ? THEME.white
-                      : THEME.textSecondary,
-                  fontWeight: 700,
-                  fontSize: 15,
-                  whiteSpace: "nowrap",
-                  boxShadow:
-                    dateMode === "SINCE_BEGINNING"
-                      ? "0 3px 8px rgba(15, 118, 110, 0.25)"
-                      : "none",
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    backgroundColor: THEME.primaryHover,
-                    color: THEME.white,
-                    borderColor: THEME.primaryHover,
-                  },
-                }}
-              >
-                Since Beginning
-              </Box>
-            </Box>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }} sx={{ minWidth: 0 }}>
               <DepartmentStatTile
                 label="Total Departments"
                 value={totalCount}
@@ -721,7 +1069,7 @@ function DepartmentFilters({
                 onClick={() => onTileClick("all")}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 4 }} sx={{ minWidth: 0 }}>
               <DepartmentStatTile
                 label="Active"
                 value={activeCount}
@@ -731,7 +1079,8 @@ function DepartmentFilters({
                 onClick={() => onTileClick("active")}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+
+            <Grid size={{ xs: 12, sm: 4 }} sx={{ minWidth: 0 }}>
               <DepartmentStatTile
                 label="Inactive"
                 value={inactiveCount}

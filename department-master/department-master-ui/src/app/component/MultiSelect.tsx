@@ -52,12 +52,9 @@ function MultiSelect({
       ),
     );
 
-  const someSelected =
-    selectedValues.length > 0 && !allSelected;
+  const someSelected = selectedValues.length > 0 && !allSelected;
 
-  const handleChange = (
-    event: SelectChangeEvent<(string | number)[]>,
-  ) => {
+  const handleChange = (event: SelectChangeEvent<(string | number)[]>) => {
     const selected = event.target.value;
 
     if (Array.isArray(selected)) {
@@ -94,9 +91,7 @@ function MultiSelect({
       required={required}
       disabled={disabled}
     >
-      <InputLabel id={`${name}-label`}>
-        {label}
-      </InputLabel>
+      <InputLabel id={`${name}-label`}>{label}</InputLabel>
 
       <Select
         labelId={`${name}-label`}
@@ -111,8 +106,7 @@ function MultiSelect({
           (selected as (string | number)[])
             .map((selectedValue) => {
               const option = options.find(
-                (item) =>
-                  String(item.value) === String(selectedValue),
+                (item) => String(item.value) === String(selectedValue),
               );
 
               return option?.label ?? String(selectedValue);
@@ -136,24 +130,17 @@ function MultiSelect({
         }}
       >
         <MenuItem value={SELECT_ALL_VALUE}>
-          <Checkbox
-            checked={allSelected}
-            indeterminate={someSelected}
-          />
+          <Checkbox checked={allSelected} indeterminate={someSelected} />
           <ListItemText primary="Select All" />
         </MenuItem>
 
         {options.map((option) => {
           const isSelected = selectedValues.some(
-            (item) =>
-              String(item) === String(option.value),
+            (item) => String(item) === String(option.value),
           );
 
           return (
-            <MenuItem
-              key={`${name}-${option.value}`}
-              value={option.value}
-            >
+            <MenuItem key={`${name}-${option.value}`} value={option.value}>
               <Checkbox checked={isSelected} />
               <ListItemText primary={option.label} />
             </MenuItem>
@@ -161,11 +148,7 @@ function MultiSelect({
         })}
       </Select>
 
-      {helperText && (
-        <FormHelperText>
-          {helperText}
-        </FormHelperText>
-      )}
+      {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>
   );
 }
