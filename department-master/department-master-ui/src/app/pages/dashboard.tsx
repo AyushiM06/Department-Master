@@ -409,7 +409,7 @@ function RechartsBar({
   data,
   children,
 }: {
-  data: TypeData[];
+  data: Array<TypeData | StackedData>;
   children: React.ReactNode;
 }) {
   return (
