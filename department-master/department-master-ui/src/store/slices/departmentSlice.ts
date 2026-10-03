@@ -155,11 +155,7 @@ export const fetchDepartments = createAsyncThunk(
         sortBy,
         direction,
       };
-
-      console.log("DEPARTMENT SEARCH REQUEST:", payload);
       const response = await searchDepartments(payload);
-      console.log("DEPARTMENT SEARCH RESPONSE:", response?.data);
-
       const pageData = response?.data?.data ?? response?.data ?? {};
       const content = Array.isArray(pageData?.content) ? pageData.content : [];
       const total = Number(pageData?.totalElements ?? 0);
@@ -169,7 +165,6 @@ export const fetchDepartments = createAsyncThunk(
         totalElements: Number.isFinite(total) ? total : 0,
       };
     } catch (error: any) {
-      console.error("FETCH DEPARTMENTS ERROR:", error);
       return rejectWithValue(
         error?.response?.data?.message ||
           error?.response?.data?.error ||
@@ -228,7 +223,6 @@ export const fetchDepartmentCounts = createAsyncThunk(
       );
       return response;
     } catch (error: any) {
-      console.error("FAILED TO FETCH DEPARTMENT COUNTS:", error);
       return rejectWithValue(
         error?.response?.data || "Failed to fetch department counts",
       );

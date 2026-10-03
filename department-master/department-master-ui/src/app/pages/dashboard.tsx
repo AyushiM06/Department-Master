@@ -156,10 +156,6 @@ const THEME = {
   border: "#D7E7E4",
   active: "#16A34A",
   inactive: "#DC2626",
-  cyan: "#0D9488",
-  amber: "#D97706",
-  violet: "#0F766E",
-  blue: "#0F766E",
 };
 
 const CHART_COLORS = [
@@ -204,38 +200,20 @@ const CHIP = {
 };
 
 const formatDate = (value?: string | null): string => {
-  if (!value) {
-    return "NA";
-  }
-
+  if (!value) return "NA";
   const rawValue = String(value).trim();
-
-  if (!rawValue) {
-    return "NA";
-  }
-
-  const date = new Date(rawValue);
-
-  if (Number.isNaN(date.getTime())) {
-    return rawValue;
-  }
-
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-
-  let hours = date.getHours();
-
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  const amPm = hours >= 12 ? "PM" : "AM";
-
-  hours = hours % 12 || 12;
-
-  return `${day}-${month}-${year} ${String(hours).padStart(
-    2,
-    "0",
-  )}:${minutes} ${amPm}`;
+  if (!rawValue) return "NA";
+  const date = new Date(rawValue.endsWith("Z") ? rawValue : `${rawValue}Z`);
+  if (Number.isNaN(date.getTime())) return rawValue;
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
 };
 
 const typeColumns: MRT_ColumnDef<TypeData, any>[] = [
@@ -269,17 +247,11 @@ function ViewToggle({
   onChange: (value: TableView) => void;
 }) {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "center",
-        mb: 1.5,
-      }}
-    >
+    <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
       <ToggleButtonGroup
         value={value}
         exclusive
-        onChange={(_, value) => value && onChange(value)}
+        onChange={(_, v) => v && onChange(v)}
         sx={{
           p: "4px",
           gap: "4px",
@@ -287,7 +259,6 @@ function ViewToggle({
           background: "linear-gradient(135deg, #E6F4F2 0%, #F0FAF8 100%)",
           border: `1px solid ${THEME.border}`,
           boxShadow: "0 3px 12px rgba(15, 118, 110, 0.10)",
-
           "& .MuiToggleButton-root": {
             minWidth: 88,
             height: 34,
@@ -300,19 +271,13 @@ function ViewToggle({
             fontWeight: 800,
             color: THEME.textSecondary,
             transition: "all 0.2s ease",
-
-            "&:hover": {
-              backgroundColor: "#D9F0EC",
-              color: THEME.primaryDark,
-            },
+            "&:hover": { backgroundColor: "#D9F0EC", color: THEME.primaryDark },
           },
-
           "& .MuiToggleButton-root.Mui-selected": {
             background: "linear-gradient(135deg, #0F766E 0%, #115E59 100%)",
             color: "#FFFFFF",
             boxShadow: "0 3px 8px rgba(15, 118, 110, 0.28)",
           },
-
           "& .MuiToggleButton-root.Mui-selected:hover": {
             backgroundColor: THEME.primaryDark,
             color: "#FFFFFF",
@@ -320,26 +285,13 @@ function ViewToggle({
         }}
       >
         <ToggleButton value="graph">
-          <Box
-            component="span"
-            sx={{
-              mr: 0.7,
-              fontSize: 13,
-            }}
-          >
+          <Box component="span" sx={{ mr: 0.7, fontSize: 13 }}>
             ◈
           </Box>
           Graph
         </ToggleButton>
-
         <ToggleButton value="table">
-          <Box
-            component="span"
-            sx={{
-              mr: 0.7,
-              fontSize: 13,
-            }}
-          >
+          <Box component="span" sx={{ mr: 0.7, fontSize: 13 }}>
             ▤
           </Box>
           Table
@@ -365,25 +317,14 @@ function ChartCard({
   return (
     <Card sx={chartCardSx}>
       <CardContent
-        sx={{
-          height: "100%",
-          boxSizing: "border-box",
-          overflow: "visible",
-        }}
+        sx={{ height: "100%", boxSizing: "border-box", overflow: "visible" }}
       >
         <Typography
-          sx={{
-            fontSize: 18,
-            fontWeight: 800,
-            color: THEME.darkTeal,
-            mb: 1,
-          }}
+          sx={{ fontSize: 18, fontWeight: 800, color: THEME.darkTeal, mb: 1 }}
         >
           {title}
         </Typography>
-
         <ViewToggle value={view} onChange={setView} />
-
         {view === "graph" ? graph : table}
       </CardContent>
     </Card>
@@ -415,7 +356,6 @@ function DateField({
       >
         {label}
       </Typography>
-
       <Box
         component="input"
         type="date"
@@ -435,73 +375,70 @@ function DateField({
           fontSize: 14,
           color: THEME.darkTeal,
           boxSizing: "border-box",
-
-          "&:focus": {
-            borderColor: THEME.primary,
-          },
+          "&:focus": { borderColor: THEME.primary },
         }}
       />
     </Box>
   );
 }
 
+const rechartsAxis = {
+  tick: { fontSize: 12, fill: "#64748B" },
+  axisLine: false,
+  tickLine: false,
+};
+const rechartsTooltip = {
+  borderRadius: 12,
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
+};
+
 function RechartsType({ data }: { data: TypeData[] }) {
+  return (
+    <RechartsBar data={data}>
+      <Bar dataKey="count" name="Departments" radius={[8, 8, 2, 2]}>
+        {data.map((_, i) => (
+          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+        ))}
+      </Bar>
+    </RechartsBar>
+  );
+}
+
+function RechartsBar({
+  data,
+  children,
+}: {
+  data: TypeData[];
+  children: React.ReactNode;
+}) {
   return (
     <Box sx={chartBoxSx}>
       <ResponsiveContainer>
         <BarChart
           data={data}
-          margin={{
-            top: 10,
-            right: 15,
-            left: 0,
-            bottom: 10,
-          }}
+          margin={{ top: 10, right: 15, left: 0, bottom: 10 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
             stroke="#D7E7E4"
             vertical={false}
           />
-
           <XAxis
             dataKey="name"
-            tick={{
-              fontSize: 12,
-              fill: "#64748B",
-            }}
+            tick={rechartsAxis.tick}
             axisLine={false}
             tickLine={false}
           />
-
           <YAxis
             allowDecimals={false}
-            tick={{
-              fontSize: 12,
-              fill: "#64748B",
-            }}
+            tick={rechartsAxis.tick}
             axisLine={false}
             tickLine={false}
           />
-
-          <RechartsTooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid #E2E8F0",
-              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
-            }}
-          />
-
+          <RechartsTooltip contentStyle={rechartsTooltip} />
           <RechartsLegend />
-
-          <Bar dataKey="count" name="Departments" radius={[8, 8, 2, 2]}>
-            {data.map((_, index) => (
-              <Cell
-                key={index}
-                fill={CHART_COLORS[index % CHART_COLORS.length]}
-              />
-            ))}
-          </Bar>
+          {children}
         </BarChart>
       </ResponsiveContainer>
     </Box>
@@ -534,15 +471,7 @@ function RechartsStatus({ data }: { data: StatusData[] }) {
               />
             ))}
           </Pie>
-
-          <RechartsTooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid #E2E8F0",
-              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
-            }}
-          />
-
+          <RechartsTooltip contentStyle={rechartsTooltip} />
           <RechartsLegend />
         </PieChart>
       </ResponsiveContainer>
@@ -552,82 +481,27 @@ function RechartsStatus({ data }: { data: StatusData[] }) {
 
 function RechartsStacked({ data }: { data: StackedData[] }) {
   return (
-    <Box sx={chartBoxSx}>
-      <ResponsiveContainer>
-        <BarChart
-          data={data}
-          margin={{
-            top: 10,
-            right: 15,
-            left: 0,
-            bottom: 10,
-          }}
-        >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="#D7E7E4"
-            vertical={false}
-          />
-
-          <XAxis
-            dataKey="name"
-            tick={{
-              fontSize: 12,
-              fill: "#64748B",
-            }}
-            axisLine={false}
-            tickLine={false}
-          />
-
-          <YAxis
-            allowDecimals={false}
-            tick={{
-              fontSize: 12,
-              fill: "#64748B",
-            }}
-            axisLine={false}
-            tickLine={false}
-          />
-
-          <RechartsTooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid #E2E8F0",
-              boxShadow: "0 8px 24px rgba(15, 23, 42, 0.12)",
-            }}
-          />
-
-          <RechartsLegend />
-
-          <Bar
-            dataKey="active"
-            name="Active"
-            stackId="status"
-            fill={THEME.active}
-          />
-
-          <Bar
-            dataKey="inactive"
-            name="Inactive"
-            stackId="status"
-            fill={THEME.inactive}
-            radius={[6, 6, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    </Box>
+    <RechartsBar data={data}>
+      <Bar
+        dataKey="active"
+        name="Active"
+        stackId="status"
+        fill={THEME.active}
+      />
+      <Bar
+        dataKey="inactive"
+        name="Inactive"
+        stackId="status"
+        fill={THEME.inactive}
+        radius={[6, 6, 0, 0]}
+      />
+    </RechartsBar>
   );
 }
 
 function RechartsGauge({ percentage }: { percentage: number }) {
   return (
-    <Box
-      sx={{
-        position: "relative",
-        ...chartBoxSx,
-        height: 300,
-      }}
-    >
+    <Box sx={{ position: "relative", ...chartBoxSx, height: 300 }}>
       <ResponsiveContainer>
         <RadialBarChart
           cx="50%"
@@ -637,12 +511,7 @@ function RechartsGauge({ percentage }: { percentage: number }) {
           barSize={24}
           startAngle={180}
           endAngle={0}
-          data={[
-            {
-              name: "Active Rate",
-              value: percentage,
-            },
-          ]}
+          data={[{ name: "Active Rate", value: percentage }]}
         >
           <PolarAngleAxis
             type="number"
@@ -650,19 +519,15 @@ function RechartsGauge({ percentage }: { percentage: number }) {
             angleAxisId={0}
             tick={false}
           />
-
           <RadialBar
             dataKey="value"
             cornerRadius={12}
-            background={{
-              fill: "#D7E7E4",
-            }}
+            background={{ fill: "#D7E7E4" }}
             angleAxisId={0}
             fill={THEME.active}
           />
         </RadialBarChart>
       </ResponsiveContainer>
-
       <Box
         sx={{
           position: "absolute",
@@ -672,22 +537,11 @@ function RechartsGauge({ percentage }: { percentage: number }) {
           textAlign: "center",
         }}
       >
-        <Typography
-          sx={{
-            fontSize: 34,
-            fontWeight: 800,
-            color: THEME.active,
-          }}
-        >
+        <Typography sx={{ fontSize: 34, fontWeight: 800, color: THEME.active }}>
           {percentage}%
         </Typography>
-
         <Typography
-          sx={{
-            fontSize: 13,
-            color: THEME.textSecondary,
-            fontWeight: 600,
-          }}
+          sx={{ fontSize: 13, color: THEME.textSecondary, fontWeight: 600 }}
         >
           Active Rate
         </Typography>
@@ -795,8 +649,6 @@ function Dashboard() {
 
       setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to load users:", err);
-
       setUsers([]);
     }
   };
@@ -806,9 +658,7 @@ function Dashboard() {
       const headers = await getDepartmentTableHeaders();
 
       setDepartmentTableHeaders([...headers].sort((a, b) => a.order - b.order));
-    } catch (error) {
-      console.error("Failed to load department table headers:", error);
-    }
+    } catch (error) {}
   };
 
   const loadDepartmentNames = async () => {
@@ -826,18 +676,14 @@ function Dashboard() {
         sortBy: "departmentName",
         direction: "asc",
       });
-
       const result = response?.data ?? {};
-
       const content = Array.isArray(result?.content)
         ? result.content
         : Array.isArray(result?.rows)
           ? result.rows
           : [];
-
       setMasterData((prev) => ({
         ...prev,
-
         departments: content
           .filter((item: any) => item?.id != null)
           .map((item: any) => ({
@@ -845,14 +691,11 @@ function Dashboard() {
             name: String(item.departmentName ?? ""),
           })),
       }));
-    } catch (err) {
-      console.error("Failed to load department names:", err);
-    }
+    } catch (err) {}
   };
 
   useEffect(() => {
     if (!dropdownLoaded && !dropdownLoading) {
-      console.log("FIRST DROPDOWN LOAD FROM DASHBOARD - API CALL");
       dispatch(fetchDepartmentDropdownData());
     }
   }, [dispatch, dropdownLoaded, dropdownLoading]);
@@ -930,17 +773,20 @@ function Dashboard() {
     );
   };
 
+  const header = (field: string, fallback: string) =>
+    getDepartmentTableHeader(field, fallback);
+  const textCell = (value: React.ReactNode, extra = {}) => (
+    <Box sx={{ ...TEXT_CELL, ...extra }}>{value}</Box>
+  );
+  const userCell = (id?: string | number | null) => textCell(getUserName(id));
   const departmentDetailColumns = React.useMemo<
     MRT_ColumnDef<DepartmentDetailRow, any>[]
   >(
     () => [
       {
         accessorKey: "departmentCode",
-
-        header: getDepartmentTableHeader("departmentCode", "Department Code"),
-
+        header: header("departmentCode", "Department Code"),
         size: 170,
-
         Cell: ({ cell }) => (
           <Chip
             label={String(cell.getValue() ?? "NA")}
@@ -955,33 +801,20 @@ function Dashboard() {
           />
         ),
       },
-
       {
         accessorKey: "departmentName",
-
-        header: getDepartmentTableHeader("departmentName", "Department Name"),
-
+        header: header("departmentName", "Department Name"),
         size: 230,
-
         Cell: ({ cell }) => (
-          <Box
-            sx={{
-              fontWeight: 700,
-              color: "#0F172A",
-            }}
-          >
+          <Box sx={{ fontWeight: 700, color: "#0F172A" }}>
             {String(cell.getValue() ?? "NA")}
           </Box>
         ),
       },
-
       {
         accessorKey: "departmentType",
-
-        header: getDepartmentTableHeader("departmentType", "Department Type"),
-
+        header: header("departmentType", "Department Type"),
         size: 160,
-
         Cell: ({ cell }) => (
           <Chip
             label={String(cell.getValue() ?? "NA")}
@@ -995,89 +828,46 @@ function Dashboard() {
           />
         ),
       },
-
       {
         accessorKey: "departmentHead",
-
-        header: getDepartmentTableHeader("departmentHead", "Department Head"),
-
+        header: header("departmentHead", "Department Head"),
         size: 180,
-
-        Cell: ({ row }) => (
-          <Box sx={TEXT_CELL}>{getUserName(row.original.departmentHead)}</Box>
-        ),
+        Cell: ({ row }) => userCell(row.original.departmentHead),
       },
-
       {
         accessorKey: "branches",
-
-        header: getDepartmentTableHeader("branches", "Branch"),
-
+        header: header("branches", "Branch"),
         size: 190,
-
         enableSorting: false,
-
-        Cell: ({ row }) => (
-          <Box
-            sx={{
-              ...TEXT_CELL,
-              whiteSpace: "normal",
-              lineHeight: 1.5,
-            }}
-          >
-            {getBranchNames(row.original.branches)}
-          </Box>
-        ),
+        Cell: ({ row }) =>
+          textCell(getBranchNames(row.original.branches), {
+            whiteSpace: "normal",
+            lineHeight: 1.5,
+          }),
       },
-
       {
         accessorKey: "businessUnit",
-
-        header: getDepartmentTableHeader("businessUnit", "Business Unit"),
-
+        header: header("businessUnit", "Business Unit"),
         size: 180,
-
-        Cell: ({ row }) => (
-          <Box sx={TEXT_CELL}>
-            {getBusinessUnitName(row.original.businessUnit)}
-          </Box>
-        ),
+        Cell: ({ row }) =>
+          textCell(getBusinessUnitName(row.original.businessUnit)),
       },
-
       {
         accessorKey: "departmentEmail",
-
-        header: getDepartmentTableHeader("departmentEmail", "Email"),
-
+        header: header("departmentEmail", "Email"),
         size: 230,
-
-        Cell: ({ cell }) => {
-          const value = cell.getValue<string | null>();
-
-          return (
-            <Box
-              sx={{
-                ...TEXT_CELL,
-                fontSize: 13,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {value?.trim() || "NA"}
-            </Box>
-          );
-        },
+        Cell: ({ cell }) =>
+          textCell(cell.getValue<string | null>()?.trim() || "NA", {
+            fontSize: 13,
+            whiteSpace: "nowrap",
+          }),
       },
-
       {
         accessorKey: "status",
-
-        header: getDepartmentTableHeader("status", "Status"),
-
+        header: header("status", "Status"),
         size: 130,
-
         Cell: ({ cell }) => {
           const inactive = Boolean(cell.getValue<boolean>());
-
           return (
             <Chip
               label={inactive ? "Inactive" : "Active"}
@@ -1085,68 +875,39 @@ function Dashboard() {
               sx={{
                 ...CHIP,
                 minWidth: 82,
-
                 bgcolor: inactive ? "#FEF2F2" : "#ECFDF5",
-
                 color: inactive ? "#DC2626" : "#15803D",
-
                 border: inactive ? "1px solid #FECACA" : "1px solid #BBF7D0",
               }}
             />
           );
         },
       },
-
       {
         accessorKey: "createdBy",
-
-        header: getDepartmentTableHeader("createdBy", "Created By"),
-
+        header: header("createdBy", "Created By"),
         size: 160,
-
-        Cell: ({ cell }) => (
-          <Box sx={TEXT_CELL}>
-            {getUserName(cell.getValue<string | number | null>())}
-          </Box>
-        ),
+        Cell: ({ cell }) => userCell(cell.getValue<string | number | null>()),
       },
-
       {
         accessorKey: "createdAt",
-
-        header: getDepartmentTableHeader("createdAt", "Created At"),
-
+        header: header("createdAt", "Created At"),
         size: 180,
-
-        Cell: ({ cell }) => (
-          <Box sx={TEXT_CELL}>{formatDate(cell.getValue<string | null>())}</Box>
-        ),
+        Cell: ({ cell }) =>
+          textCell(formatDate(cell.getValue<string | null>())),
       },
-
       {
         accessorKey: "updatedBy",
-
-        header: getDepartmentTableHeader("updatedBy", "Updated By"),
-
+        header: header("updatedBy", "Updated By"),
         size: 160,
-
-        Cell: ({ cell }) => (
-          <Box sx={TEXT_CELL}>
-            {getUserName(cell.getValue<string | number | null>())}
-          </Box>
-        ),
+        Cell: ({ cell }) => userCell(cell.getValue<string | number | null>()),
       },
-
       {
         accessorKey: "updatedAt",
-
-        header: getDepartmentTableHeader("updatedAt", "Updated At"),
-
+        header: header("updatedAt", "Updated At"),
         size: 180,
-
-        Cell: ({ cell }) => (
-          <Box sx={TEXT_CELL}>{formatDate(cell.getValue<string | null>())}</Box>
-        ),
+        Cell: ({ cell }) =>
+          textCell(formatDate(cell.getValue<string | null>())),
       },
     ],
     [
@@ -1215,10 +976,6 @@ function Dashboard() {
         Number(result?.totalElements ?? result?.total ?? content.length),
       );
     } catch (err: any) {
-      console.error("Failed to load department details:", err);
-
-      console.error("SERVER RESPONSE:", err?.response?.data);
-
       setDepartmentDetails([]);
 
       setDepartmentDialogTotalElements(0);
@@ -1441,8 +1198,6 @@ function Dashboard() {
         })),
       );
     } catch (err) {
-      console.error("Failed to load dashboard data:", err);
-
       setError("Failed to load dashboard data.");
     } finally {
       setLoading(false);
@@ -1507,28 +1262,11 @@ function Dashboard() {
   ];
 
   const apexAreaOptions: ApexOptions = {
-    chart: {
-      type: "area",
-
-      toolbar: {
-        show: false,
-      },
-
-      zoom: {
-        enabled: false,
-      },
-    },
-
+    chart: { type: "area", toolbar: { show: false }, zoom: { enabled: false } },
     colors: ["#0F766E"],
-
-    stroke: {
-      curve: "smooth",
-      width: 3,
-    },
-
+    stroke: { curve: "smooth", width: 3 },
     fill: {
       type: "gradient",
-
       gradient: {
         shadeIntensity: 1,
         opacityFrom: 0.45,
@@ -1536,99 +1274,42 @@ function Dashboard() {
         stops: [0, 90, 100],
       },
     },
-
     markers: {
       size: 5,
-
       strokeWidth: 2,
-
       strokeColors: "#FFFFFF",
-
-      hover: {
-        size: 7,
-      },
+      hover: { size: 7 },
     },
-
-    dataLabels: {
-      enabled: false,
-    },
-
+    dataLabels: { enabled: false },
     xaxis: {
       categories: typeData.map((x) => x.name),
-
-      labels: {
-        style: {
-          colors: "#64748B",
-        },
-      },
+      labels: { style: { colors: "#64748B" } },
     },
-
     yaxis: {
       min: 0,
-
       forceNiceScale: true,
-
-      labels: {
-        style: {
-          colors: "#64748B",
-        },
-      },
+      labels: { style: { colors: "#64748B" } },
     },
-
-    tooltip: {
-      theme: "light",
-
-      y: {
-        formatter: (v) => `${v} departments`,
-      },
-    },
-
-    grid: {
-      strokeDashArray: 4,
-
-      borderColor: "#D7E7E4",
-    },
+    tooltip: { theme: "light", y: { formatter: (v) => `${v} departments` } },
+    grid: { strokeDashArray: 4, borderColor: "#D7E7E4" },
   };
-
   const apexDonutOptions: ApexOptions = {
-    chart: {
-      type: "donut",
-    },
-
+    chart: { type: "donut" },
     colors: ["#16A34A", "#DC2626"],
-
     labels: statusData.map((x) => x.name),
-
-    legend: {
-      position: "bottom",
-      fontSize: "13px",
-      fontWeight: 600,
-    },
-
-    dataLabels: {
-      enabled: true,
-    },
-
-    stroke: {
-      width: 3,
-      colors: ["#FFFFFF"],
-    },
-
+    legend: { position: "bottom", fontSize: "13px", fontWeight: 600 },
+    dataLabels: { enabled: true },
+    stroke: { width: 3, colors: ["#FFFFFF"] },
     plotOptions: {
       pie: {
         donut: {
           size: "65%",
-
           labels: {
             show: true,
-
             total: {
               show: true,
-
               label: "Total",
-
               fontSize: "14px",
-
               fontWeight: 600,
             },
           },
@@ -1636,123 +1317,54 @@ function Dashboard() {
       },
     },
   };
-
   const apexGaugeOptions: ApexOptions = {
-    chart: {
-      type: "radialBar",
-
-      toolbar: {
-        show: false,
-      },
-    },
-
+    chart: { type: "radialBar", toolbar: { show: false } },
     colors: ["#16A34A"],
-
     plotOptions: {
       radialBar: {
         startAngle: -135,
-
         endAngle: 135,
-
-        hollow: {
-          size: "65%",
-        },
-
-        track: {
-          background: "#D7E7E4",
-
-          strokeWidth: "100%",
-        },
-
+        hollow: { size: "65%" },
+        track: { background: "#D7E7E4", strokeWidth: "100%" },
         dataLabels: {
           name: {
             show: true,
-
             offsetY: 55,
-
             fontSize: "14px",
-
             fontWeight: 600,
-
             color: "#64748B",
           },
-
           value: {
             show: true,
-
             offsetY: -5,
-
             fontSize: "34px",
-
             fontWeight: 800,
-
             color: "#16A34A",
-
             formatter: (v) => `${Math.round(Number(v))}%`,
           },
         },
       },
     },
-
     labels: ["Active Rate"],
   };
-
   const apexBarOptions: ApexOptions = {
-    chart: {
-      type: "bar",
-
-      toolbar: {
-        show: false,
-      },
-    },
-
+    chart: { type: "bar", toolbar: { show: false } },
     colors: CHART_COLORS,
-
     plotOptions: {
       bar: {
         horizontal: true,
-
         borderRadius: 8,
-
         barHeight: "55%",
-
         distributed: true,
       },
     },
-
     xaxis: {
       categories: typeData.map((x) => x.name),
-
-      labels: {
-        style: {
-          colors: "#64748B",
-        },
-      },
+      labels: { style: { colors: "#64748B" } },
     },
-
-    dataLabels: {
-      enabled: true,
-
-      style: {
-        fontSize: "12px",
-
-        fontWeight: 700,
-      },
-    },
-
-    tooltip: {
-      theme: "light",
-
-      y: {
-        formatter: (v) => `${v} departments`,
-      },
-    },
-
-    grid: {
-      strokeDashArray: 4,
-
-      borderColor: "#D7E7E4",
-    },
+    dataLabels: { enabled: true, style: { fontSize: "12px", fontWeight: 700 } },
+    tooltip: { theme: "light", y: { formatter: (v) => `${v} departments` } },
+    grid: { strokeDashArray: 4, borderColor: "#D7E7E4" },
   };
 
   useEffect(() => {
@@ -2091,16 +1703,195 @@ function Dashboard() {
     return () => root.dispose();
   }, [activePercentage, views.amGauge]);
 
+  const renderTable = (type: "type" | "status" | "stacked" | "rate") => {
+    if (type === "status")
+      return (
+        <DepartmentTable<StatusData>
+          rows={statusData}
+          columns={statusColumns}
+          onCountClick={handleStatusCountClick}
+        />
+      );
+    if (type === "stacked")
+      return (
+        <DepartmentTable<StackedData>
+          rows={stackedData}
+          columns={stackedColumns}
+          onActiveClick={handleStackedActiveClick}
+          onInactiveClick={handleStackedInactiveClick}
+        />
+      );
+    if (type === "rate")
+      return (
+        <DepartmentTable<ActiveRateData>
+          rows={activeRateData}
+          columns={activeRateColumns}
+          onPercentageClick={handleActiveRateClick}
+        />
+      );
+    return (
+      <DepartmentTable<TypeData>
+        rows={typeData}
+        columns={typeColumns}
+        onCountClick={handleDepartmentCountClick}
+      />
+    );
+  };
+
+  const charts = [
+    {
+      key: "amBar" as ViewKey,
+      title: "Department Type",
+      size: { xs: 12, lg: 7 },
+      graph: <Box ref={amBarRef} sx={chartBoxSx} />,
+      table: renderTable("type"),
+    },
+    {
+      key: "amDonut" as ViewKey,
+      title: "Department Status",
+      size: { xs: 12, lg: 5 },
+      graph: <Box ref={amDonutRef} sx={chartBoxSx} />,
+      table: renderTable("status"),
+    },
+    {
+      key: "amGauge" as ViewKey,
+      title: "Active Rate",
+      size: { xs: 12 },
+      graph: (
+        <Box
+          ref={amGaugeRef}
+          sx={{ width: "100%", height: 300, overflow: "visible" }}
+        />
+      ),
+      table: renderTable("rate"),
+    },
+    {
+      key: "reBar" as ViewKey,
+      title: "Department Type",
+      size: { xs: 12, lg: 7 },
+      graph: <RechartsType data={typeData} />,
+      table: renderTable("type"),
+    },
+    {
+      key: "reDonut" as ViewKey,
+      title: "Department Status",
+      size: { xs: 12, lg: 5 },
+      graph: <RechartsStatus data={statusData} />,
+      table: renderTable("status"),
+    },
+    {
+      key: "reStacked" as ViewKey,
+      title: "Active vs Inactive",
+      size: { xs: 12 },
+      graph: <RechartsStacked data={stackedData} />,
+      table: renderTable("stacked"),
+    },
+    {
+      key: "reGauge" as ViewKey,
+      title: "Active Rate",
+      size: { xs: 12 },
+      graph: <RechartsGauge percentage={activePercentage} />,
+      table: renderTable("rate"),
+    },
+    {
+      key: "apexArea" as ViewKey,
+      title: "Department Area",
+      size: { xs: 12, lg: 7 },
+      graph: (
+        <Chart
+          options={apexAreaOptions}
+          series={[{ name: "Departments", data: typeData.map((x) => x.count) }]}
+          type="area"
+          height={310}
+          width="100%"
+        />
+      ),
+      table: renderTable("type"),
+    },
+    {
+      key: "apexDonut" as ViewKey,
+      title: "Status Donut",
+      size: { xs: 12, lg: 5 },
+      graph: (
+        <Chart
+          options={apexDonutOptions}
+          series={statusData.map((x) => x.count)}
+          type="donut"
+          height={310}
+          width="100%"
+        />
+      ),
+      table: renderTable("status"),
+    },
+    {
+      key: "apexBar" as ViewKey,
+      title: "Horizontal Bar",
+      size: { xs: 12, lg: 7 },
+      graph: (
+        <Chart
+          options={apexBarOptions}
+          series={[{ name: "Departments", data: typeData.map((x) => x.count) }]}
+          type="bar"
+          height={310}
+          width="100%"
+        />
+      ),
+      table: renderTable("type"),
+    },
+    {
+      key: "apexGauge" as ViewKey,
+      title: "Speedometer",
+      size: { xs: 12, lg: 5 },
+      graph: (
+        <Box
+          sx={{
+            width: "100%",
+            minWidth: 0,
+            display: "flex",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+        >
+          <Chart
+            options={apexGaugeOptions}
+            series={[activePercentage]}
+            type="radialBar"
+            height={310}
+            width="100%"
+          />
+        </Box>
+      ),
+      table: (
+        <Box sx={{ width: "100%", minWidth: 0, overflow: "hidden" }}>
+          {renderTable("rate")}
+        </Box>
+      ),
+    },
+  ];
+
+  const renderCharts = (items: typeof charts, mb: number) => (
+    <Grid container spacing={2} sx={{ mb }}>
+      {items.map((item) => (
+        <Grid key={item.key} size={item.size}>
+          <ChartCard
+            title={item.title}
+            view={views[item.key]}
+            setView={setView(item.key)}
+            graph={item.graph}
+            table={item.table}
+          />
+        </Grid>
+      ))}
+    </Grid>
+  );
+
   return (
     <Box
       sx={{
         width: "100%",
         minHeight: "100%",
         backgroundColor: THEME.background,
-        p: {
-          xs: 2,
-          md: 3,
-        },
+        p: { xs: 2, md: 3 },
         boxSizing: "border-box",
       }}
     >
@@ -2108,15 +1899,8 @@ function Dashboard() {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: {
-            xs: "flex-start",
-            sm: "center",
-          },
-
-          flexDirection: {
-            xs: "column",
-            sm: "row",
-          },
+          alignItems: { xs: "flex-start", sm: "center" },
+          flexDirection: { xs: "column", sm: "row" },
           gap: 2,
           mb: 3,
         }}
@@ -2124,28 +1908,19 @@ function Dashboard() {
         <Box>
           <Typography
             sx={{
-              fontSize: {
-                xs: 24,
-                md: 28,
-              },
+              fontSize: { xs: 24, md: 28 },
               fontWeight: 800,
               color: THEME.darkTeal,
             }}
           >
             Department Insights
           </Typography>
-
           <Typography
-            sx={{
-              fontSize: 14,
-              color: THEME.textSecondary,
-              mt: 0.5,
-            }}
+            sx={{ fontSize: 14, color: THEME.textSecondary, mt: 0.5 }}
           >
             Insights into departments and their status
           </Typography>
         </Box>
-
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
@@ -2175,24 +1950,14 @@ function Dashboard() {
           }}
         >
           <CardContent>
-            <Typography
-              sx={{
-                color: THEME.inactive,
-                fontWeight: 600,
-              }}
-            >
+            <Typography sx={{ color: THEME.inactive, fontWeight: 600 }}>
               {error}
             </Typography>
           </CardContent>
         </Card>
       )}
 
-      <Card
-        sx={{
-          ...cardSx,
-          mb: 3,
-        }}
-      >
+      <Card sx={{ ...cardSx, mb: 3 }}>
         <CardContent>
           <Box
             sx={{
@@ -2212,7 +1977,6 @@ function Dashboard() {
               max={toDate}
               onChange={setFromDate}
             />
-
             <DateField
               label="To Date"
               value={toDate}
@@ -2220,17 +1984,13 @@ function Dashboard() {
               max={getToday()}
               onChange={setToDate}
             />
-
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
                 height: 42,
-                justifyContent: {
-                  xs: "flex-start",
-                  md: "flex-end",
-                },
+                justifyContent: { xs: "flex-start", md: "flex-end" },
               }}
             >
               <Button
@@ -2244,14 +2004,11 @@ function Dashboard() {
                   fontWeight: 700,
                   borderRadius: 1.5,
                   textTransform: "none",
-                  "&:hover": {
-                    backgroundColor: THEME.primaryDark,
-                  },
+                  "&:hover": { backgroundColor: THEME.primaryDark },
                 }}
               >
                 Apply
               </Button>
-
               <Button
                 variant="outlined"
                 onClick={handleReset}
@@ -2278,377 +2035,39 @@ function Dashboard() {
       </Card>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid
-          size={{
-            xs: 12,
-            sm: 4,
-          }}
-        >
-          <DepartmentStatTile
-            label="Total Departments"
-            value={stats.total}
-            icon={<BusinessIcon />}
-            type="total"
-            selected={false}
-            onClick={() => {}}
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            sm: 4,
-          }}
-        >
-          <DepartmentStatTile
-            label="Active"
-            value={stats.active}
-            icon={<CheckCircleIcon />}
-            type="active"
-            selected={false}
-            onClick={() => {}}
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            sm: 4,
-          }}
-        >
-          <DepartmentStatTile
-            label="Inactive"
-            value={stats.inactive}
-            icon={<CancelIcon />}
-            type="inactive"
-            selected={false}
-            onClick={() => {}}
-          />
-        </Grid>
+        {[
+          ["Total Departments", stats.total, <BusinessIcon />, "total"],
+          ["Active", stats.active, <CheckCircleIcon />, "active"],
+          ["Inactive", stats.inactive, <CancelIcon />, "inactive"],
+        ].map(([label, value, icon, type]) => (
+          <Grid key={String(type)} size={{ xs: 12, sm: 4 }}>
+            <DepartmentStatTile
+              label={String(label)}
+              value={Number(value)}
+              icon={icon as React.ReactNode}
+              type={type as "total" | "active" | "inactive"}
+              selected={false}
+              onClick={() => {}}
+            />
+          </Grid>
+        ))}
       </Grid>
 
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid
-          size={{
-            xs: 12,
-            lg: 7,
-          }}
-        >
-          <ChartCard
-            title="Department Type"
-            view={views.amBar}
-            setView={setView("amBar")}
-            graph={<Box ref={amBarRef} sx={chartBoxSx} />}
-            table={
-              <DepartmentTable<TypeData>
-                rows={typeData}
-                columns={typeColumns}
-                onCountClick={handleDepartmentCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            lg: 5,
-          }}
-        >
-          <ChartCard
-            title="Department Status"
-            view={views.amDonut}
-            setView={setView("amDonut")}
-            graph={<Box ref={amDonutRef} sx={chartBoxSx} />}
-            table={
-              <DepartmentTable<StatusData>
-                rows={statusData}
-                columns={statusColumns}
-                onCountClick={handleStatusCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-          }}
-        >
-          <ChartCard
-            title="Active Rate"
-            view={views.amGauge}
-            setView={setView("amGauge")}
-            graph={
-              <Box
-                ref={amGaugeRef}
-                sx={{
-                  width: "100%",
-                  height: 300,
-                  overflow: "visible",
-                }}
-              />
-            }
-            table={
-              <DepartmentTable<ActiveRateData>
-                rows={activeRateData}
-                columns={activeRateColumns}
-                onPercentageClick={handleActiveRateClick}
-              />
-            }
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid
-          size={{
-            xs: 12,
-            lg: 7,
-          }}
-        >
-          <ChartCard
-            title="Department Type"
-            view={views.reBar}
-            setView={setView("reBar")}
-            graph={<RechartsType data={typeData} />}
-            table={
-              <DepartmentTable<TypeData>
-                rows={typeData}
-                columns={typeColumns}
-                onCountClick={handleDepartmentCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            lg: 5,
-          }}
-        >
-          <ChartCard
-            title="Department Status"
-            view={views.reDonut}
-            setView={setView("reDonut")}
-            graph={<RechartsStatus data={statusData} />}
-            table={
-              <DepartmentTable<StatusData>
-                rows={statusData}
-                columns={statusColumns}
-                onCountClick={handleStatusCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-          }}
-        >
-          <ChartCard
-            title="Active vs Inactive"
-            view={views.reStacked}
-            setView={setView("reStacked")}
-            graph={<RechartsStacked data={stackedData} />}
-            table={
-              <DepartmentTable<StackedData>
-                rows={stackedData}
-                columns={stackedColumns}
-                onActiveClick={handleStackedActiveClick}
-                onInactiveClick={handleStackedInactiveClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-          }}
-        >
-          <ChartCard
-            title="Active Rate"
-            view={views.reGauge}
-            setView={setView("reGauge")}
-            graph={<RechartsGauge percentage={activePercentage} />}
-            table={
-              <DepartmentTable<ActiveRateData>
-                rows={activeRateData}
-                columns={activeRateColumns}
-                onPercentageClick={handleActiveRateClick}
-              />
-            }
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid
-          size={{
-            xs: 12,
-            lg: 7,
-          }}
-        >
-          <ChartCard
-            title="Department Area"
-            view={views.apexArea}
-            setView={setView("apexArea")}
-            graph={
-              <Chart
-                options={apexAreaOptions}
-                series={[
-                  {
-                    name: "Departments",
-
-                    data: typeData.map((x) => x.count),
-                  },
-                ]}
-                type="area"
-                height={310}
-                width="100%"
-              />
-            }
-            table={
-              <DepartmentTable<TypeData>
-                rows={typeData}
-                columns={typeColumns}
-                onCountClick={handleDepartmentCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            lg: 5,
-          }}
-        >
-          <ChartCard
-            title="Status Donut"
-            view={views.apexDonut}
-            setView={setView("apexDonut")}
-            graph={
-              <Chart
-                options={apexDonutOptions}
-                series={statusData.map((x) => x.count)}
-                type="donut"
-                height={310}
-                width="100%"
-              />
-            }
-            table={
-              <DepartmentTable<StatusData>
-                rows={statusData}
-                columns={statusColumns}
-                onCountClick={handleStatusCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            lg: 7,
-          }}
-        >
-          <ChartCard
-            title="Horizontal Bar"
-            view={views.apexBar}
-            setView={setView("apexBar")}
-            graph={
-              <Chart
-                options={apexBarOptions}
-                series={[
-                  {
-                    name: "Departments",
-                    data: typeData.map((x) => x.count),
-                  },
-                ]}
-                type="bar"
-                height={310}
-                width="100%"
-              />
-            }
-            table={
-              <DepartmentTable<TypeData>
-                rows={typeData}
-                columns={typeColumns}
-                onCountClick={handleDepartmentCountClick}
-              />
-            }
-          />
-        </Grid>
-
-        <Grid
-          size={{
-            xs: 12,
-            lg: 5,
-          }}
-        >
-          <ChartCard
-            title="Speedometer"
-            view={views.apexGauge}
-            setView={setView("apexGauge")}
-            graph={
-              <Box
-                sx={{
-                  width: "100%",
-                  minWidth: 0,
-                  display: "flex",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                <Chart
-                  options={apexGaugeOptions}
-                  series={[activePercentage]}
-                  type="radialBar"
-                  height={310}
-                  width="100%"
-                />
-              </Box>
-            }
-            table={
-              <Box
-                sx={{
-                  width: "100%",
-                  minWidth: 0,
-                  overflow: "hidden",
-                }}
-              >
-                <DepartmentTable<ActiveRateData>
-                  rows={activeRateData}
-                  columns={activeRateColumns}
-                  onPercentageClick={handleActiveRateClick}
-                />
-              </Box>
-            }
-          />
-        </Grid>
-      </Grid>
+      {renderCharts(charts.slice(0, 3), 4)}
+      {renderCharts(charts.slice(3, 7), 4)}
+      {renderCharts(charts.slice(7), 4)}
 
       <Dialog
         open={departmentDialogOpen}
         onClose={(_, reason) => {
-          if (reason === "backdropClick" || reason === "escapeKeyDown") {
-            return;
-          }
+          if (reason === "backdropClick" || reason === "escapeKeyDown") return;
           closeDepartmentDialog();
         }}
         maxWidth="xl"
         fullWidth
         slotProps={{
           paper: {
-            sx: {
-              borderRadius: 2,
-              overflow: "hidden",
-              maxHeight: "90vh",
-            },
+            sx: { borderRadius: 2, overflow: "hidden", maxHeight: "90vh" },
           },
         }}
       >
@@ -2668,20 +2087,12 @@ function Dashboard() {
           <IconButton
             onClick={closeDepartmentDialog}
             disabled={departmentDialogLoading}
-            sx={{
-              color: "#FFFFFF",
-            }}
+            sx={{ color: "#FFFFFF" }}
           >
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-
-        <DialogContent
-          sx={{
-            p: 1,
-            backgroundColor: "#FFFFFF",
-          }}
-        >
+        <DialogContent sx={{ p: 1, backgroundColor: "#FFFFFF" }}>
           {departmentDialogLoading && departmentDetails.length === 0 ? (
             <Box
               sx={{
@@ -2691,25 +2102,11 @@ function Dashboard() {
                 justifyContent: "center",
               }}
             >
-              <CircularProgress
-                sx={{
-                  color: THEME.primary,
-                }}
-              />
+              <CircularProgress sx={{ color: THEME.primary }} />
             </Box>
           ) : departmentDialogError ? (
-            <Box
-              sx={{
-                p: 4,
-                textAlign: "center",
-              }}
-            >
-              <Typography
-                sx={{
-                  color: THEME.inactive,
-                  fontWeight: 700,
-                }}
-              >
+            <Box sx={{ p: 4, textAlign: "center" }}>
+              <Typography sx={{ color: THEME.inactive, fontWeight: 700 }}>
                 {departmentDialogError}
               </Typography>
             </Box>
@@ -2723,9 +2120,9 @@ function Dashboard() {
               sorting={departmentDialogSorting}
               setSorting={setDepartmentDialogSorting}
               isLoading={departmentDialogLoading}
-              enablePagination={true}
-              manualPagination={true}
-              manualSorting={true}
+              enablePagination
+              manualPagination
+              manualSorting
               maxHeight="52vh"
             />
           )}
@@ -2749,12 +2146,7 @@ function Dashboard() {
             boxShadow: "0 4px 18px rgba(0,0,0,0.15)",
           }}
         >
-          <CircularProgress
-            size={24}
-            sx={{
-              color: THEME.primary,
-            }}
-          />
+          <CircularProgress size={24} sx={{ color: THEME.primary }} />
         </Box>
       )}
     </Box>
@@ -2762,13 +2154,8 @@ function Dashboard() {
 }
 
 const formatDateForFilter = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    "0",
-  )}-${String(date.getDate()).padStart(2, "0")}`;
-
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const getToday = () => formatDateForFilter(new Date());
-
 const getOneWeekAgo = () => {
   const date = new Date();
   date.setDate(date.getDate() - 6);

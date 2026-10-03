@@ -41,8 +41,6 @@ const getRoleFromToken = (token: string): UserRole | null => {
 
     return null;
   } catch (error) {
-    console.error("Unable to read role from login token:", error);
-
     return null;
   }
 };

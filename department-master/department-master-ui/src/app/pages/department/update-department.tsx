@@ -230,9 +230,6 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
         sortBy: "departmentName",
         direction: "asc",
       });
-
-      console.log("UPDATE PARENT DEPARTMENTS RESPONSE:", response);
-
       const content = Array.isArray(response?.data?.content)
         ? response.data.content
         : [];
@@ -251,8 +248,6 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
 
       setParentDepartmentOptions(options);
     } catch (error) {
-      console.error("FAILED TO LOAD PARENT DEPARTMENTS:", error);
-
       setParentDepartmentOptions([]);
     } finally {
       setParentDepartmentLoading(false);
@@ -264,11 +259,7 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
       setDepartmentHeadLoading(true);
 
       const response = await searchEmployees("");
-
-      console.log("EMPLOYEE API RESPONSE:", response);
-
       const employees = Array.isArray(response) ? response : [];
-
       const options: AutoCompleteOption[] = employees
         .filter(
           (employee: any) =>
@@ -280,13 +271,8 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
           label: String(employee.name).trim(),
           value: Number(employee.id),
         }));
-
-      console.log("EMPLOYEE AUTOCOMPLETE OPTIONS:", options);
-
       setDepartmentHeadOptions(options);
     } catch (error) {
-      console.error("FAILED TO LOAD DEPARTMENT HEADS:", error);
-
       setDepartmentHeadOptions([]);
     } finally {
       setDepartmentHeadLoading(false);
@@ -509,32 +495,28 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
 
         status: formValues.status === "true",
       };
-
-      console.log("UPDATE DEPARTMENT PAYLOAD:", payload);
-
       await updateDepartment(department.id, payload);
-
       const attachments: DepartmentAttachmentUpload[] = [];
 
-if (isFile(formValues.departmentLogo)) {
-  attachments.push({
-    departmentId: department.id,
-    file: formValues.departmentLogo,
-    attachmentType: "LOGO",
-  });
-}
+      if (isFile(formValues.departmentLogo)) {
+        attachments.push({
+          departmentId: department.id,
+          file: formValues.departmentLogo,
+          attachmentType: "LOGO",
+        });
+      }
 
-if (isFile(formValues.supportingDocument)) {
-  attachments.push({
-    departmentId: department.id,
-    file: formValues.supportingDocument,
-    attachmentType: "DOCUMENT",
-  });
-}
+      if (isFile(formValues.supportingDocument)) {
+        attachments.push({
+          departmentId: department.id,
+          file: formValues.supportingDocument,
+          attachmentType: "DOCUMENT",
+        });
+      }
 
-if (attachments.length > 0) {
-  await uploadDepartmentAttachment(attachments);
-}
+      if (attachments.length > 0) {
+        await uploadDepartmentAttachment(attachments);
+      }
 
       await Swal.fire({
         text: "Department updated successfully!",
@@ -561,10 +543,7 @@ if (attachments.length > 0) {
         navigate(-1);
       }
     } catch (error: any) {
-      console.error("FAILED TO UPDATE DEPARTMENT:", error);
-
       const data = error?.response?.data;
-
       const message =
         typeof data === "string"
           ? data
@@ -778,11 +757,13 @@ if (attachments.length > 0) {
 
                                 return [...prev, newEmployeeOption];
                               });
-                            } catch (error) {
-                              console.error(
-                                "FAILED TO CREATE EMPLOYEE:",
-                                error,
-                              );
+                            } catch {
+                              await Swal.fire({
+                                text: "Failed to create employee.",
+                                icon: "error",
+                                timer: 3000,
+                                showConfirmButton: false,
+                              });
                             } finally {
                               setDepartmentHeadLoading(false);
                             }

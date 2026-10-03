@@ -96,7 +96,7 @@ public class DepartmentExcelService {
         if (Objects.nonNull(validationError)) return incorrect(result, validationError);
         String name = data.getOrDefault("departmentName", "").trim();
         String normalizedName = name.toLowerCase();
-        if (names.contains(normalizedName)) return duplicate(result, "Department already exists");
+        if (names.contains(normalizedName)) return duplicate(result);
         try {
             DepartmentImportRequestDto request = createRequest(data, masterData);
             names.add(normalizedName);
@@ -139,11 +139,18 @@ public class DepartmentExcelService {
         String email = data.get("departmentEmail");
         request.setDepartmentEmail(Objects.isNull(email) || email.isBlank() ? null : email);
         request.setBranches(getBranchIds(data.get("branch"), masterData));
-        request.setDepartmentHead(parseLong(data.get("departmentHead"), "Department Head"));
+        request.setDepartmentHead(getDepartmentHeadId(data.get("departmentHead")));
         request.setBusinessUnit(getBusinessUnitId(data.get("businessUnit"), masterData));
         request.setWorkingDays(getWorkingDays(data.get("workingDays")));
         request.setStatus(parseStatus(data.get("status")));
         return request;
+    }
+
+    private Long getDepartmentHeadId(String value) {
+        if (Objects.isNull(value) || value.isBlank())
+            return null;
+        String departmentHeadName = value.trim();
+        return userClient.getUsersForLookup().stream().filter(Objects::nonNull).filter(user -> Objects.nonNull(user.getUsername())).filter(user -> user.getUsername().equalsIgnoreCase(departmentHeadName)).map(UserLookupResponseDto::getId).findFirst().orElse(null);
     }
 
     private List<String> getWorkingDays(String value) {
@@ -314,8 +321,8 @@ public class DepartmentExcelService {
         return new ImportResult(resultWithReason(result, INCORRECT, reason), null);
     }
 
-    private ImportResult duplicate(Map<String, Object> result, String reason) {
-        return new ImportResult(resultWithReason(result, DUPLICATE, reason), null);
+    private ImportResult duplicate(Map<String, Object> result) {
+        return new ImportResult(resultWithReason(result, DUPLICATE, "Department already exists"), null);
     }
 
     private Map<String, Object> resultWithReason(Map<String, Object> result, String type, String reason) {
@@ -425,8 +432,7 @@ public class DepartmentExcelService {
             if (departmentType != null && !departmentType.isBlank() && !departmentType.equalsIgnoreCase(department.getDepartmentType())) return false;
             if (branches != null && !branches.isEmpty() && (department.getBranches() == null || department.getBranches().stream().noneMatch(branches::contains))) return false;
             if (businessUnit != null && !Objects.equals(department.getBusinessUnit(), businessUnit)) return false;
-            if (status != null && department.isStatus() != status) return false;
-            return true;
+            return status == null || department.isStatus() == status;
         }).toList();
     }
 

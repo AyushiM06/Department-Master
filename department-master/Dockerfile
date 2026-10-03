@@ -5,11 +5,9 @@ WORKDIR /app
 COPY common-service /app/common-service
 COPY department-master /app/department-master
 
-RUN --mount=type=cache,target=/home/gradle/.gradle \
-    gradle -p /app/common-service publishToMavenLocal --no-daemon
+RUN gradle -p /app/common-service publishToMavenLocal --no-daemon
 
-RUN --mount=type=cache,target=/home/gradle/.gradle \
-    gradle -p /app/department-master bootJar --no-daemon
+RUN gradle -p /app/department-master bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre
 

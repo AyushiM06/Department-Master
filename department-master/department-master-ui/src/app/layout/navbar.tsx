@@ -64,7 +64,6 @@ function Navbar() {
       setEmailNotifications(emails);
       setEmailPage(0);
     } catch (error) {
-      console.error("Error fetching email notifications:", error);
       setEmailNotifications([]);
     } finally {
       setIsLoadingEmails(false);
@@ -102,9 +101,7 @@ function Navbar() {
       }
 
       setEmailAnchorEl(null);
-    } catch (error) {
-      console.error("Failed to mark email as read:", error);
-    }
+    } catch (error) {}
   };
 
   const handleCloseEmailDetails = () => {
@@ -114,9 +111,7 @@ function Navbar() {
   const handleDownload = async (notification: EmailNotification) => {
     try {
       await downloadEmailAttachment(notification.id);
-    } catch (error) {
-      console.error("Error downloading email attachment:", error);
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {

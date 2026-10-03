@@ -4,8 +4,7 @@ WORKDIR /app
 
 COPY config-server /app/config-server
 
-RUN --mount=type=cache,target=/home/gradle/.gradle \
-    gradle -p /app/config-server bootJar --no-daemon
+RUN gradle -p /app/config-server bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre
 

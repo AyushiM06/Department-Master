@@ -65,6 +65,7 @@ import {
   createImportEmailNotification,
   getAllUsers,
   getDepartmentExcelHeaders,
+  getDepartmentActivityHeaders,
   getDepartmentHistory,
   searchDepartments,
   searchEmployees,
@@ -72,10 +73,15 @@ import {
   type UserLookupResponse,
   type ExcelHeader,
 } from "./departmentApi";
-
 import DepartmentFilters from "./department-filter";
 import AddDepartment from "./add-department";
 import UpdateDepartment from "./update-department";
+import {
+  canAddDepartment as canAddDepartmentPermission,
+  canUpdateDepartment as canUpdateDepartmentPermission,
+  canDeleteDepartment as canDeleteDepartmentPermission,
+  canImportExport as canImportExportPermission,
+} from "../../../utils/rolePermissions";
 const THEME = {
   primary: "#0F766E",
   primaryHover: "#115E59",
@@ -88,7 +94,6 @@ const THEME = {
 };
 const TEXT_CELL = { color: "#475569", fontWeight: 600 };
 const CHIP = { fontWeight: 700, borderRadius: 1.5 };
-
 const IMPORT_PREVIEW_TABLE_OPTIONS = {
   enableSorting: false,
   enableGlobalFilter: false,
@@ -167,9 +172,10 @@ type ImportResult = {
   importFilePath?: string;
   importFileName?: string;
 };
-
-type DepartmentHistoryChange = { old: unknown; new: unknown };
-
+type DepartmentHistoryChange = {
+  old: unknown;
+  new: unknown;
+};
 type DepartmentHistory = {
   id: number;
   departmentId: number;
@@ -210,67 +216,15 @@ export type DepartmentRow = {
   updatedBy?: string | null;
   updatedAt?: string | null;
 };
-type DropdownOption = { label: string; value: string | number };
-type UserRole = "ADMIN" | "MANAGEMENT" | "HOD" | "USER";
-const getCurrentUserRole = (): UserRole | null => {
-  const storedRole =
-    sessionStorage.getItem("role") || localStorage.getItem("role");
-  if (storedRole) {
-    const role = storedRole.toUpperCase();
-    if (
-      role === "ADMIN" ||
-      role === "MANAGEMENT" ||
-      role === "HOD" ||
-      role === "USER"
-    ) {
-      return role as UserRole;
-    }
-  }
-  const token = sessionStorage.getItem("token");
-  if (!token) {
-    return null;
-  }
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) {
-      return null;
-    }
-    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decodedPayload = JSON.parse(atob(normalizedPayload));
-    const role = String(decodedPayload?.role ?? "").toUpperCase();
-    if (
-      role === "ADMIN" ||
-      role === "MANAGEMENT" ||
-      role === "HOD" ||
-      role === "USER"
-    ) {
-      return role as UserRole;
-    }
-    return null;
-  } catch (error) {
-    return null;
-  }
+type DropdownOption = {
+  label: string;
+  value: string | number;
 };
 const formatDate = (value?: string | null) => {
   if (!value) return "NA";
-  const rawValue = String(value).trim();
-  if (!rawValue) return "NA";
-  const match = rawValue.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/,
-  );
-  if (!match) {
-    return rawValue;
-  }
-  const [, year, month, day, hour, minute] = match;
-  const date = new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-  );
+  const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return rawValue;
+    return value;
   }
   return date.toLocaleString("en-IN", {
     day: "2-digit",
@@ -306,40 +260,19 @@ const FilterChip = ({
     onDelete={onDelete}
     sx={{
       ...CHIP,
-      maxWidth: "100%",
-      height: "auto",
-      minHeight: 28,
       color,
       backgroundColor: background,
-      "& .MuiChip-label": {
-        display: "block",
-        whiteSpace: "normal",
-        overflowWrap: "anywhere",
-        wordBreak: "break-word",
-        px: 1,
-        py: 0.5,
-      },
-      "& .MuiChip-deleteIcon": {
-        color,
-        fontSize: 18,
-        flexShrink: 0,
-        "&:hover": { color },
-      },
+      "& .MuiChip-deleteIcon": { color, fontSize: 18, "&:hover": { color } },
     }}
   />
 );
 function DepartmentActivity() {
   const dispatch = useDispatch<AppDispatch>();
   const state = useSelector((s: RootState) => s.department);
-  const userRole = getCurrentUserRole();
-  const canAddDepartment =
-    userRole === "ADMIN" ||
-    userRole === "MANAGEMENT" ||
-    userRole === "HOD" ||
-    userRole === "USER";
-  const canUpdateDepartment = userRole === "ADMIN" || userRole === "HOD";
-  const canDeleteDepartment = userRole === "ADMIN";
-  const canImportExport = userRole === "ADMIN";
+  const canAddDepartment = canAddDepartmentPermission();
+  const canUpdateDepartment = canUpdateDepartmentPermission();
+  const canDeleteDepartment = canDeleteDepartmentPermission();
+  const canImportExport = canImportExportPermission();
   const {
     rows,
     totalElements,
@@ -421,6 +354,9 @@ function DepartmentActivity() {
     [dropdownData],
   );
   const [excelHeaders, setExcelHeaders] = useState<ExcelHeader[]>([]);
+  const [activityHeaders, setActivityHeaders] = useState<
+    Awaited<ReturnType<typeof getDepartmentActivityHeaders>>
+  >([]);
   const [users, setUsers] = useState<UserLookupResponse[]>([]);
   const [departmentHeadOptions, setDepartmentHeadOptions] = useState<
     DropdownOption[]
@@ -449,11 +385,21 @@ function DepartmentActivity() {
       try {
         const headers = await getDepartmentExcelHeaders();
         setExcelHeaders(headers);
-      } catch (error) {
+      } catch {
         setExcelHeaders([]);
       }
     };
     loadExcelHeaders();
+  }, []);
+  useEffect(() => {
+    const loadActivityHeaders = async () => {
+      try {
+        setActivityHeaders(await getDepartmentActivityHeaders());
+      } catch {
+        setActivityHeaders([]);
+      }
+    };
+    loadActivityHeaders();
   }, []);
   useEffect(() => {
     if (!dropdownLoaded && !dropdownLoading) {
@@ -465,7 +411,7 @@ function DepartmentActivity() {
       try {
         const data = await getAllUsers();
         setUsers(data);
-      } catch (error) {
+      } catch {
         setUsers([]);
       }
     };
@@ -476,7 +422,6 @@ function DepartmentActivity() {
       users.map((user) => [user.id, user.username]),
     );
   }, [users]);
-
   useEffect(() => {
     const loadDepartmentHeads = async () => {
       try {
@@ -497,10 +442,8 @@ function DepartmentActivity() {
         setDepartmentHeadOptions([]);
       }
     };
-
     loadDepartmentHeads();
   }, []);
-
   useEffect(() => {
     const loadParentDepartments = async () => {
       try {
@@ -512,11 +455,9 @@ function DepartmentActivity() {
           sortBy: "departmentName",
           direction: "asc",
         });
-
         const content = Array.isArray(response?.data?.content)
           ? response.data.content
           : [];
-
         const options: DropdownOption[] = content
           .filter(
             (department: any) =>
@@ -530,25 +471,20 @@ function DepartmentActivity() {
             (option: DropdownOption) =>
               option.label && Number.isFinite(Number(option.value)),
           );
-
         setParentDepartmentOptions(options);
       } catch (error) {
         setParentDepartmentOptions([]);
       }
     };
-
     loadParentDepartments();
   }, []);
-
   const getEmployeeName = (value: unknown) => {
     if (value === null || value === undefined || value === "") {
       return "NA";
     }
-
     const option = departmentHeadOptions.find(
       (item) => String(item.value) === String(value),
     );
-
     return option?.label ?? "NA";
   };
   const getUserName = (value?: string | number | null) => {
@@ -635,7 +571,6 @@ function DepartmentActivity() {
     dispatch(setToDate(value));
     setFiltersChanged(true);
   };
-
   const handleDateModeChange = async (
     mode: "DATE_FILTER" | "SINCE_BEGINNING",
   ) => {
@@ -1146,6 +1081,8 @@ function DepartmentActivity() {
     ) : (
       <Box sx={TEXT_CELL}>NA</Box>
     );
+  const getActivityHeader = (field: string, fallback: string) =>
+    activityHeaders.find((item) => item.field === field)?.header ?? fallback;
   const columns = useMemo<MRT_ColumnDef<DepartmentRow>[]>(
     () => [
       {
@@ -1195,7 +1132,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "departmentCode",
-        header: "Department Code",
+        header: getActivityHeader("departmentCode", "Department Code"),
         size: 170,
         Cell: ({ row }) => (
           <Tooltip title="View Department History">
@@ -1220,7 +1157,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "departmentName",
-        header: "Name",
+        header: getActivityHeader("departmentName", "Name"),
         size: 230,
         Cell: ({ cell }) => (
           <Box sx={{ fontWeight: 700, color: "#0F172A" }}>
@@ -1230,7 +1167,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "departmentHead",
-        header: "Department Head",
+        header: getActivityHeader("departmentHead", "Department Head"),
         size: 180,
         Cell: ({ row }) => (
           <Box sx={TEXT_CELL}>
@@ -1240,7 +1177,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "departmentType",
-        header: "Type",
+        header: getActivityHeader("departmentType", "Type"),
         size: 160,
         Cell: ({ cell }) => (
           <Chip
@@ -1257,7 +1194,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "branches",
-        header: "Branch",
+        header: getActivityHeader("branches", "Branch"),
         size: 190,
         enableSorting: true,
         Cell: ({ row }) => (
@@ -1273,7 +1210,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "businessUnit",
-        header: "Business Unit",
+        header: getActivityHeader("businessUnit", "Business Unit"),
         size: 180,
         Cell: ({ row }) => (
           <Box sx={TEXT_CELL}>
@@ -1283,7 +1220,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "departmentEmail",
-        header: "Department Email",
+        header: getActivityHeader("departmentEmail", "Department Email"),
         size: 230,
         Cell: ({ cell }) => {
           const value = cell.getValue<string | null>();
@@ -1318,7 +1255,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: getActivityHeader("status", "Status"),
         size: 130,
         Cell: ({ cell }) => {
           const inactive = Boolean(cell.getValue<boolean>());
@@ -1339,7 +1276,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "createdBy",
-        header: "Created By",
+        header: getActivityHeader("createdBy", "Created By"),
         size: 160,
         Cell: ({ cell }) => (
           <Box sx={TEXT_CELL}>
@@ -1349,7 +1286,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "createdAt",
-        header: "Created On",
+        header: getActivityHeader("createdAt", "Created On"),
         size: 150,
         Cell: ({ cell }) => (
           <Box sx={TEXT_CELL}>{formatDate(cell.getValue<string | null>())}</Box>
@@ -1357,7 +1294,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "updatedBy",
-        header: "Updated By",
+        header: getActivityHeader("updatedBy", "Updated By"),
         size: 160,
         Cell: ({ cell }) => (
           <Box sx={TEXT_CELL}>
@@ -1367,7 +1304,7 @@ function DepartmentActivity() {
       },
       {
         accessorKey: "updatedAt",
-        header: "Updated On",
+        header: getActivityHeader("updatedAt", "Updated On"),
         size: 150,
         Cell: ({ cell }) => (
           <Box sx={TEXT_CELL}>{formatDate(cell.getValue<string | null>())}</Box>
@@ -1381,6 +1318,7 @@ function DepartmentActivity() {
       userMap,
       canUpdateDepartment,
       canDeleteDepartment,
+      activityHeaders,
     ],
   );
   const historyColumns = useMemo<MRT_ColumnDef<DepartmentHistory>[]>(() => {
@@ -1417,10 +1355,8 @@ function DepartmentActivity() {
         if (String(item.value) === String(value)) {
           return true;
         }
-
         const optionId = Number(item.value);
         const historyId = Number(value);
-
         return (
           Number.isFinite(optionId) &&
           Number.isFinite(historyId) &&
@@ -1460,7 +1396,6 @@ function DepartmentActivity() {
           </Typography>
         );
       }
-
       if (isUnchanged) {
         return (
           <Typography
@@ -1474,7 +1409,6 @@ function DepartmentActivity() {
           </Typography>
         );
       }
-
       if (action === "UPDATED") {
         return (
           <Typography
@@ -1488,7 +1422,6 @@ function DepartmentActivity() {
           </Typography>
         );
       }
-
       if (action === "INACTIVATED") {
         return (
           <Typography
@@ -1502,7 +1435,6 @@ function DepartmentActivity() {
           </Typography>
         );
       }
-
       return (
         <Typography
           sx={{
@@ -1721,7 +1653,13 @@ function DepartmentActivity() {
         id: field.id,
         header: field.header,
         size: field.size,
-        Cell: ({ row }: { row: { original: DepartmentHistory } }) => {
+        Cell: ({
+          row,
+        }: {
+          row: {
+            original: DepartmentHistory;
+          };
+        }) => {
           const change = row.original.changes?.[field.id];
           if (field.type === "parent") {
             return renderParentDepartmentChange(change, row.original.action);
@@ -1975,16 +1913,11 @@ function DepartmentActivity() {
             <Box
               sx={{
                 mb: 2,
-                p: { xs: 1, sm: 1.5 },
+                p: 1.5,
                 display: "flex",
-                alignItems: { xs: "flex-start", sm: "center" },
+                alignItems: "center",
                 gap: 1,
                 flexWrap: "wrap",
-                width: "100%",
-                maxWidth: "100%",
-                minWidth: 0,
-                boxSizing: "border-box",
-                overflow: "hidden",
                 border: `1px solid ${THEME.border}`,
                 borderRadius: 2,
               }}
@@ -2000,15 +1933,7 @@ function DepartmentActivity() {
                 Filter By:
               </Typography>
               <Box
-                sx={{
-                  display: "flex",
-                  gap: 0.75,
-                  flexWrap: "wrap",
-                  flex: 1,
-                  minWidth: 0,
-                  width: "100%",
-                  overflow: "hidden",
-                }}
+                sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", flex: 1 }}
               >
                 {(fromDate || toDate) && (
                   <FilterChip

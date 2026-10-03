@@ -4,8 +4,7 @@ WORKDIR /app
 
 COPY eureka-server /app/eureka-server
 
-RUN --mount=type=cache,target=/home/gradle/.gradle \
-    gradle -p /app/eureka-server bootJar --no-daemon
+RUN gradle -p /app/eureka-server bootJar --no-daemon
 
 FROM eclipse-temurin:21-jre
 

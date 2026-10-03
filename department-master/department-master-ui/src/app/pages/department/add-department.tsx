@@ -102,7 +102,9 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
     trigger,
     formState: { isSubmitting },
   } = useForm<AddDepartmentFormValues>({
-    defaultValues: { departments: [{ ...departmentInitialValues }] },
+    defaultValues: {
+      departments: [{ ...departmentInitialValues }],
+    },
     resolver: yupResolver(addDepartmentValidationSchema),
     mode: "onBlur",
     reValidateMode: "onChange",
@@ -163,9 +165,7 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         setBranchOptions(mappedBranches);
         setBusinessUnitOptions(mappedBusinessUnits);
         setShiftOptions(mappedShifts);
-      } catch (error) {
-        console.error("FAILED TO LOAD ADD DEPARTMENT DROPDOWNS:", error);
-
+      } catch {
         if (!mounted) return;
 
         setDepartmentTypeOptions([]);
@@ -199,8 +199,6 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         direction: "asc",
       });
 
-      console.log("PARENT DEPARTMENT INITIAL LOAD:", response);
-
       const content = Array.isArray(response?.data?.content)
         ? response.data.content
         : [];
@@ -213,9 +211,7 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         }));
 
       setParentDepartmentOptions(options);
-    } catch (error) {
-      console.error("FAILED TO LOAD PARENT DEPARTMENTS:", error);
-
+    } catch {
       setParentDepartmentOptions([]);
     } finally {
       setParentDepartmentLoading(false);
@@ -227,8 +223,6 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
       setDepartmentHeadLoading(true);
 
       const response = await searchEmployees("");
-
-      console.log("DEPARTMENT HEAD INITIAL LOAD:", response);
 
       const employees = Array.isArray(response) ? response : [];
 
@@ -245,9 +239,7 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         }));
 
       setDepartmentHeadOptions(options);
-    } catch (error) {
-      console.error("FAILED TO LOAD DEPARTMENT HEADS:", error);
-
+    } catch {
       setDepartmentHeadOptions([]);
     } finally {
       setDepartmentHeadLoading(false);
@@ -319,26 +311,24 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         keywords: formValuesItem.keywords,
 
         remarks: formValuesItem.remarks,
+
         status: false,
       }));
 
-      console.log("ALL DEPARTMENT PAYLOADS:", payloads);
       const response = await createDepartment(payloads);
 
-      console.log("BULK DEPARTMENT SAVE RESPONSE:", response);
       const savedDepartments = Array.isArray(response)
         ? response
         : Array.isArray(response?.data)
           ? response.data
           : [];
 
-      console.log("SAVED DEPARTMENTS:", savedDepartments);
-
       if (savedDepartments.length !== formValues.departments.length) {
         throw new Error(
           `Expected ${formValues.departments.length} departments to be saved, but ${savedDepartments.length} were returned.`,
         );
       }
+
       const attachments: DepartmentAttachmentUpload[] =
         formValues.departments.flatMap((formValuesItem, index) => {
           const savedDepartment = savedDepartments[index];
@@ -350,29 +340,25 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
           }
 
           const departmentAttachments: DepartmentAttachmentUpload[] = [];
+
           if (isFile(formValuesItem.departmentLogo)) {
             departmentAttachments.push({
               departmentId: Number(savedDepartmentId),
-
               file: formValuesItem.departmentLogo,
-
               attachmentType: "LOGO",
             });
           }
+
           if (isFile(formValuesItem.supportingDocument)) {
             departmentAttachments.push({
               departmentId: Number(savedDepartmentId),
-
               file: formValuesItem.supportingDocument,
-
               attachmentType: "DOCUMENT",
             });
           }
 
           return departmentAttachments;
         });
-
-      console.log("ALL ATTACHMENTS:", attachments);
 
       if (attachments.length > 0) {
         await uploadDepartmentAttachment(attachments);
@@ -383,18 +369,13 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
           formValues.departments.length > 1
             ? `${formValues.departments.length} Departments Added Successfully`
             : "Department Added Successfully",
-
         icon: "success",
-
         timer: 2000,
-
         showConfirmButton: false,
       });
 
       await onClose();
     } catch (error) {
-      console.error("FAILED TO SAVE DEPARTMENTS:", error);
-
       if (axios.isAxiosError(error)) {
         const backendData = error.response?.data;
 
@@ -420,11 +401,8 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
           error instanceof Error
             ? error.message
             : "Something went wrong while saving departments",
-
         icon: "error",
-
         timer: 3000,
-
         showConfirmButton: false,
       });
     }
@@ -652,17 +630,20 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
                                     ? prev
                                     : [...prev, newEmployeeOption];
                                 });
-                              } catch (error) {
-                                console.error(
-                                  "FAILED TO CREATE EMPLOYEE:",
-                                  error,
-                                );
+                              } catch {
+                                await Swal.fire({
+                                  text: "Failed to create department head.",
+                                  icon: "error",
+                                  timer: 3000,
+                                  showConfirmButton: false,
+                                });
                               } finally {
                                 setDepartmentHeadLoading(false);
                               }
 
                               return;
                             }
+
                             field.onChange(option);
                           }}
                         />

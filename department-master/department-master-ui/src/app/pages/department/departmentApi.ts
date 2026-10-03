@@ -457,3 +457,8 @@ export const getDepartmentHistory = async (departmentId: number): Promise<Depart
   const response = await api.get<DepartmentHistory[]>(`/history/${departmentId}`);
   return response.data;
 };
+
+export const getDepartmentActivityHeaders = async (): Promise<TableHeader[]> => {
+  const response = await api.get<TableHeader[]>("/headers/activity");
+  return response.data;
+};

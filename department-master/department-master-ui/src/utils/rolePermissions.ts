@@ -55,11 +55,6 @@ export const getCurrentUserRole = (): UserRole | null => {
 
     return null;
   } catch (error) {
-    console.error(
-      "Unable to read user role from token:",
-      error
-    );
-
     return null;
   }
 };
