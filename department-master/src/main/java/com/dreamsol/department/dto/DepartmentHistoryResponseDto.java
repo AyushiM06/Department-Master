@@ -13,16 +13,10 @@ import java.util.Map;
 public class DepartmentHistoryResponseDto {
 
     private Long id;
-
     private Long departmentId;
-
     private String departmentCode;
-
     private String action;
-
     private String performedBy;
-
     private LocalDateTime performedAt;
-
     private Map<String, Map<String, Object>> changes;
 }

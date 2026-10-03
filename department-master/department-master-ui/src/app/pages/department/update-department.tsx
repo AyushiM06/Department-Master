@@ -6,7 +6,19 @@ import { useNavigate } from "react-router-dom";
 import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Swal from "sweetalert2";
-import { Box, Button, Card, CardContent, Grid, Paper } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Paper,
+  Typography,
+} from "@mui/material";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 
 import TextField from "../../component/TextField";
 import TextArea from "../../component/TextArea";
@@ -28,6 +40,8 @@ import type { MultiAutoCompleteOption } from "../../component/MultiAutoComplete"
 import {
   updateDepartment,
   uploadDepartmentAttachment,
+  deleteDepartmentAttachment,
+  downloadDepartmentAttachment,
   type DepartmentAttachmentUpload,
   createDepartmentEmailNotification,
   searchDepartments,
@@ -84,6 +98,10 @@ export interface DepartmentRow {
   description?: string | null;
   departmentLogo?: string | null;
   documentPath?: string | null;
+  departmentLogoUuid?: string | null;
+  departmentLogoFileName?: string | null;
+  documentUuid?: string | null;
+  documentFileName?: string | null;
   tags?: string[] | null;
   keywords?: string | null;
   remarks?: string | null;
@@ -190,13 +208,20 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
     [dropdownData],
   );
 
-  const [existingDepartmentLogo, setExistingDepartmentLogo] = useState<
+  const [existingDepartmentLogoUuid, setExistingDepartmentLogoUuid] = useState<
     string | null
-  >(department.departmentLogo ?? null);
+  >(department.departmentLogoUuid ?? null);
 
-  const [existingSupportingDocument, setExistingSupportingDocument] = useState<
-    string | null
-  >(department.documentPath ?? null);
+  const [existingDepartmentLogoFileName, setExistingDepartmentLogoFileName] =
+    useState<string | null>(department.departmentLogoFileName ?? null);
+
+  const [existingSupportingDocumentUuid, setExistingSupportingDocumentUuid] =
+    useState<string | null>(department.documentUuid ?? null);
+
+  const [
+    existingSupportingDocumentFileName,
+    setExistingSupportingDocumentFileName,
+  ] = useState<string | null>(department.documentFileName ?? null);
 
   const {
     control,
@@ -212,6 +237,27 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
     reValidateMode: "onChange",
   });
 
+  const handleDeleteExistingLogo = async () => {
+    if (!existingDepartmentLogoUuid) return;
+    try {
+      await deleteDepartmentAttachment(existingDepartmentLogoUuid);
+      setExistingDepartmentLogoUuid(null);
+      setExistingDepartmentLogoFileName(null);
+    } catch (error) {
+      console.error("Failed to remove department logo:", error);
+    }
+  };
+
+  const handleDeleteExistingDocument = async () => {
+    if (!existingSupportingDocumentUuid) return;
+    try {
+      await deleteDepartmentAttachment(existingSupportingDocumentUuid);
+      setExistingSupportingDocumentUuid(null);
+      setExistingSupportingDocumentFileName(null);
+    } catch (error) {
+      console.error("Failed to remove supporting document:", error);
+    }
+  };
   useEffect(() => {
     if (!dropdownLoaded && !dropdownLoading) {
       dispatch(fetchDepartmentDropdownData());
@@ -369,9 +415,13 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
 
     reset(getFormValues());
 
-    setExistingDepartmentLogo(department.departmentLogo ?? null);
+    setExistingDepartmentLogoUuid(department.departmentLogoUuid ?? null);
+    setExistingDepartmentLogoFileName(
+      department.departmentLogoFileName ?? null,
+    );
 
-    setExistingSupportingDocument(department.documentPath ?? null);
+    setExistingSupportingDocumentUuid(department.documentUuid ?? null);
+    setExistingSupportingDocumentFileName(department.documentFileName ?? null);
   }, [department, dropdownLoaded, reset]);
 
   useEffect(() => {
@@ -479,11 +529,11 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
 
         departmentLogo: isFile(formValues.departmentLogo)
           ? formValues.departmentLogo.name
-          : existingDepartmentLogo,
+          : existingDepartmentLogoFileName,
 
         documentPath: isFile(formValues.supportingDocument)
           ? formValues.supportingDocument.name
-          : existingSupportingDocument,
+          : existingSupportingDocumentFileName,
 
         tags: Array.isArray(formValues.tags)
           ? formValues.tags.map((tag) => String(tag.value))
@@ -518,30 +568,34 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
         await uploadDepartmentAttachment(attachments);
       }
 
-      await Swal.fire({
-        text: "Department updated successfully!",
-        icon: "success",
-        timer: 1500,
-        showConfirmButton: false,
-
-        didOpen: () => {
-          const container = document.querySelector(
-            ".swal2-container",
-          ) as HTMLElement | null;
-
-          if (container) {
-            container.style.zIndex = "2000";
-          }
-        },
-      });
-
       await createDepartmentEmailNotification(department.id, "UPDATE");
+
+      window.dispatchEvent(new Event("department-update-notification"));
 
       if (onClose) {
         await onClose();
       } else {
         navigate(-1);
       }
+
+      setTimeout(() => {
+        Swal.fire({
+          text: "Department updated successfully!",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+
+          didOpen: () => {
+            const container = document.querySelector(
+              ".swal2-container",
+            ) as HTMLElement | null;
+
+            if (container) {
+              container.style.zIndex = "99999";
+            }
+          },
+        });
+      }, 350);
     } catch (error: any) {
       const data = error?.response?.data;
       const message =
@@ -570,10 +624,12 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
 
   const handleReset = () => {
     reset(getFormValues());
-
-    setExistingDepartmentLogo(department.departmentLogo ?? null);
-
-    setExistingSupportingDocument(department.documentPath ?? null);
+    setExistingDepartmentLogoUuid(department.departmentLogoUuid ?? null);
+    setExistingDepartmentLogoFileName(
+      department.departmentLogoFileName ?? null,
+    );
+    setExistingSupportingDocumentUuid(department.documentUuid ?? null);
+    setExistingSupportingDocumentFileName(department.documentFileName ?? null);
   };
 
   const handleBack = () => {
@@ -583,7 +639,6 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
       navigate(-1);
     }
   };
-
   return (
     <Paper
       sx={{
@@ -1066,17 +1121,89 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
                     name="departmentLogo"
                     control={control}
                     render={({ field, fieldState }) => (
-                      <Attachment
-                        label="Department Logo"
-                        file={isFile(field.value) ? field.value : null}
-                        onChange={field.onChange}
-                        allowedTypes={["image/jpeg", "image/jpg", "image/png"]}
-                        maxSizeMB={5}
-                        helperText={
-                          fieldState.error?.message ??
-                          "jpg, jpeg, png (max 5MB)"
-                        }
-                      />
+                      <Box>
+                        <Attachment
+                          label="Department Logo"
+                          file={isFile(field.value) ? field.value : null}
+                          onChange={field.onChange}
+                          allowedTypes={[
+                            "image/jpeg",
+                            "image/jpg",
+                            "image/png",
+                          ]}
+                          maxSizeMB={5}
+                          helperText={
+                            fieldState.error?.message ??
+                            "jpg, jpeg, png (max 5MB)"
+                          }
+                        />
+
+                        {!isFile(field.value) &&
+                          existingDepartmentLogoUuid &&
+                          existingDepartmentLogoFileName && (
+                            <Box
+                              sx={{
+                                mt: 1,
+                                px: 1.5,
+                                py: 1,
+                                border: "1px solid #D7E6E3",
+                                borderRadius: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 1,
+                                backgroundColor: "#F4F8F7",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  minWidth: 0,
+                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <InsertDriveFileOutlinedIcon fontSize="small" />
+
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {existingDepartmentLogoFileName}
+                                </Typography>
+                              </Box>
+
+                              <Box sx={{ display: "flex", gap: 0.5 }}>
+                                <IconButton
+                                  size="small"
+                                  title="Download"
+                                  onClick={() =>
+                                    downloadDepartmentAttachment(
+                                      existingDepartmentLogoUuid,
+                                      existingDepartmentLogoFileName,
+                                    )
+                                  }
+                                >
+                                  <DownloadOutlinedIcon fontSize="small" />
+                                </IconButton>
+
+                                <IconButton
+                                  size="small"
+                                  title="Remove"
+                                  color="error"
+                                  onClick={handleDeleteExistingLogo}
+                                >
+                                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </Box>
+                          )}
+                      </Box>
                     )}
                   />
                 </Grid>
@@ -1091,23 +1218,91 @@ function UpdateDepartment({ department, onClose }: UpdateDepartmentProps) {
                     name="supportingDocument"
                     control={control}
                     render={({ field, fieldState }) => (
-                      <Attachment
-                        label="Supporting Document"
-                        file={isFile(field.value) ? field.value : null}
-                        onChange={field.onChange}
-                        allowedTypes={[
-                          "application/pdf",
-                          "application/msword",
-                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                          "application/vnd.ms-excel",
-                          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        ]}
-                        maxSizeMB={20}
-                        helperText={
-                          fieldState.error?.message ??
-                          "pdf, docx, xlsx (max 20MB)"
-                        }
-                      />
+                      <Box>
+                        <Attachment
+                          label="Supporting Document"
+                          file={isFile(field.value) ? field.value : null}
+                          onChange={field.onChange}
+                          allowedTypes={[
+                            "application/pdf",
+                            "application/msword",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            "application/vnd.ms-excel",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                          ]}
+                          maxSizeMB={20}
+                          helperText={
+                            fieldState.error?.message ??
+                            "pdf, docx, xlsx (max 20MB)"
+                          }
+                        />
+
+                        {!isFile(field.value) &&
+                          existingSupportingDocumentUuid &&
+                          existingSupportingDocumentFileName && (
+                            <Box
+                              sx={{
+                                mt: 1,
+                                px: 1.5,
+                                py: 1,
+                                border: "1px solid #D7E6E3",
+                                borderRadius: 1.5,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                gap: 1,
+                                backgroundColor: "#F4F8F7",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  minWidth: 0,
+                                  flex: 1,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                <InsertDriveFileOutlinedIcon fontSize="small" />
+
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {existingSupportingDocumentFileName}
+                                </Typography>
+                              </Box>
+
+                              <Box sx={{ display: "flex", gap: 0.5 }}>
+                                <IconButton
+                                  size="small"
+                                  title="Download"
+                                  onClick={() =>
+                                    downloadDepartmentAttachment(
+                                      existingSupportingDocumentUuid,
+                                      existingSupportingDocumentFileName,
+                                    )
+                                  }
+                                >
+                                  <DownloadOutlinedIcon fontSize="small" />
+                                </IconButton>
+
+                                <IconButton
+                                  size="small"
+                                  title="Remove"
+                                  color="error"
+                                  onClick={handleDeleteExistingDocument}
+                                >
+                                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </Box>
+                          )}
+                      </Box>
                     )}
                   />
                 </Grid>

@@ -11,24 +11,14 @@ import java.util.List;
 public class DepartmentSearchRequestDto {
 
     private String globalSearch;
-
     private String departmentType;
-
     private List<Long> branches;
-
     private Long businessUnit;
-
     private Boolean status;
-
     private LocalDateTime fromDate;
-
     private LocalDateTime toDate;
-
     private int page = 0;
-
     private int size = 10;
-
     private String sortBy = "departmentName";
-
     private String direction = "asc";
 }

@@ -1,27 +1,67 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8085/department";
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8085/department";
 
 const api = axios.create({ baseURL: BASE_URL });
 
 api.interceptors.request.use((config) => {
   const token = sessionStorage.getItem("token");
   config.headers = config.headers ?? {};
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
+  }
   return config;
 });
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      handleUnauthorized();
+    }
+    return Promise.reject(error);
+  },
+);
 
-const GATEWAY_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/department\/?$/, "") || "http://localhost:8085";
+const GATEWAY_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/department\/?$/, "") ||
+  "http://localhost:8085";
 
 const gatewayApi = axios.create({ baseURL: GATEWAY_BASE_URL });
+
+const handleUnauthorized = () => {
+  const currentPath = window.location.pathname;
+  if (currentPath === "/login") {
+    return;
+  }
+  sessionStorage.removeItem("token");
+  localStorage.removeItem("isLoggedIn");
+  localStorage.removeItem("user");
+  localStorage.removeItem("role");
+  window.location.href = "/login";
+};
 
 gatewayApi.interceptors.request.use((config) => {
   const token = sessionStorage.getItem("token");
   config.headers = config.headers ?? {};
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  else delete config.headers.Authorization;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    delete config.headers.Authorization;
+  }
   return config;
 });
+gatewayApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      handleUnauthorized();
+    }
+    return Promise.reject(error);
+  },
+);
 
 export interface DepartmentDropdownResponseDto {
   id: number;
@@ -200,15 +240,24 @@ export type EmailNotification = {
   read: boolean;
 };
 
-export const getDepartmentDropdownData = async (): Promise<DepartmentDropdownResponse> => {
-  const response = await gatewayApi.get("/master/dropdown-data");
-  return {
-    departmentTypes: Array.isArray(response.data?.departmentTypes) ? response.data.departmentTypes : [],
-    branches: Array.isArray(response.data?.branches) ? response.data.branches : [],
-    businessUnits: Array.isArray(response.data?.businessUnits) ? response.data.businessUnits : [],
-    workingShifts: Array.isArray(response.data?.workingShifts) ? response.data.workingShifts : [],
+export const getDepartmentDropdownData =
+  async (): Promise<DepartmentDropdownResponse> => {
+    const response = await gatewayApi.get("/master/dropdown-data");
+    return {
+      departmentTypes: Array.isArray(response.data?.departmentTypes)
+        ? response.data.departmentTypes
+        : [],
+      branches: Array.isArray(response.data?.branches)
+        ? response.data.branches
+        : [],
+      businessUnits: Array.isArray(response.data?.businessUnits)
+        ? response.data.businessUnits
+        : [],
+      workingShifts: Array.isArray(response.data?.workingShifts)
+        ? response.data.workingShifts
+        : [],
+    };
   };
-};
 
 export const searchDepartments = async (payload: DepartmentSearchRequest) => {
   return await api.post("/fetch-departments", payload);
@@ -239,19 +288,37 @@ export const getDepartmentById = async (id: number) => {
   return response.data;
 };
 
-export const getDepartments = async (status: boolean, page: number, size: number, sortBy: string, sortDirection: string) => {
-  const response = await api.get("/list", { params: { status, page, size, sortBy, direction: sortDirection } });
+export const getDepartments = async (
+  status: boolean,
+  page: number,
+  size: number,
+  sortBy: string,
+  sortDirection: string,
+) => {
+  const response = await api.get("/list", {
+    params: { status, page, size, sortBy, direction: sortDirection },
+  });
   return response.data;
 };
 
 export const createDepartment = async (data: DepartmentSavePayload[]) => {
-  const payload = data.map((item) => ({ ...item, status: item.status ?? false }));
+  const payload = data.map((item) => ({
+    ...item,
+    status: item.status ?? false,
+  }));
   const response = await api.post("/save", payload, { timeout: 30000 });
   return response.data;
 };
 
-export const updateDepartment = async (id: string | number, data: DepartmentPayload) => {
-  const payload: DepartmentPayload = { ...data, id: Number(id), status: data.status ?? false };
+export const updateDepartment = async (
+  id: string | number,
+  data: DepartmentPayload,
+) => {
+  const payload: DepartmentPayload = {
+    ...data,
+    id: Number(id),
+    status: data.status ?? false,
+  };
   const response = await api.post("/save", [payload]);
   return response.data;
 };
@@ -261,7 +328,10 @@ export const deleteDepartment = async (id: number) => {
   return response.data;
 };
 
-export const getDepartmentCount = async (fromDate?: string | null, toDate?: string | null) => {
+export const getDepartmentCount = async (
+  fromDate?: string | null,
+  toDate?: string | null,
+) => {
   const response = await api.get("/count", { params: { fromDate, toDate } });
   return response.data;
 };
@@ -278,31 +348,22 @@ export const uploadDepartmentAttachment = async (
   const formData = new FormData();
 
   attachments.forEach((attachment) => {
-    formData.append(
-      "departmentIds",
-      String(attachment.departmentId),
-    );
+    formData.append("departmentIds", String(attachment.departmentId));
 
-    formData.append(
-      "files",
-      attachment.file,
-    );
+    formData.append("files", attachment.file);
 
-    formData.append(
-      "attachmentTypes",
-      attachment.attachmentType,
-    );
+    formData.append("attachmentTypes", attachment.attachmentType);
   });
 
-  const response = await api.post(
-    "/upload",
-    formData,
-  );
+  const response = await api.post("/upload", formData);
 
   return response.data;
 };
 
-export const downloadDepartmentAttachment = async (uuid: string, fileName: string) => {
+export const downloadDepartmentAttachment = async (
+  uuid: string,
+  fileName: string,
+) => {
   const response = await api.get(`/download/${uuid}`, { responseType: "blob" });
   const blob = new Blob([response.data]);
   const url = window.URL.createObjectURL(blob);
@@ -315,7 +376,9 @@ export const downloadDepartmentAttachment = async (uuid: string, fileName: strin
   window.URL.revokeObjectURL(url);
 };
 
-export const deleteDepartmentAttachment = async (uuid: string): Promise<void> => {
+export const deleteDepartmentAttachment = async (
+  uuid: string,
+): Promise<void> => {
   await api.delete(`/attachments/${uuid}`);
 };
 
@@ -335,7 +398,7 @@ export const exportDepartments = async (
     branches?: number[] | null;
     businessUnit?: number | null;
     status?: boolean | null;
-  }
+  },
 ) => {
   const response = await api.get("/excel/export", {
     params: {
@@ -343,7 +406,10 @@ export const exportDepartments = async (
       toDate,
       search: filters?.search || null,
       departmentType: filters?.departmentType || null,
-      branches: filters?.branches && filters.branches.length > 0 ? filters.branches : null,
+      branches:
+        filters?.branches && filters.branches.length > 0
+          ? filters.branches
+          : null,
       businessUnit: filters?.businessUnit ?? null,
       status: filters?.status ?? null,
     },
@@ -362,7 +428,7 @@ export const exportDepartmentsByEmail = async (
     branches?: number[] | null;
     businessUnit?: number | null;
     status?: boolean | null;
-  }
+  },
 ) => {
   const response = await api.get("/excel/export/email", {
     params: {
@@ -370,7 +436,10 @@ export const exportDepartmentsByEmail = async (
       toDate,
       search: filters?.search || null,
       departmentType: filters?.departmentType || null,
-      branches: filters?.branches && filters.branches.length > 0 ? filters.branches : null,
+      branches:
+        filters?.branches && filters.branches.length > 0
+          ? filters.branches
+          : null,
       businessUnit: filters?.businessUnit ?? null,
       status: filters?.status ?? null,
     },
@@ -403,13 +472,23 @@ export const createImportEmailNotification = async (
   invalidRecords: number,
 ) => {
   const response = await api.post("/email-notifications/import", null, {
-    params: { filePath, fileName, totalRecords, savedRecords, duplicateRecords, invalidRecords },
+    params: {
+      filePath,
+      fileName,
+      totalRecords,
+      savedRecords,
+      duplicateRecords,
+      invalidRecords,
+    },
   });
   return response.data;
 };
 
 export const downloadEmailAttachment = async (notificationId: number) => {
-  const response = await api.get(`/email-notifications/download/${notificationId}`, { responseType: "blob" });
+  const response = await api.get(
+    `/email-notifications/download/${notificationId}`,
+    { responseType: "blob" },
+  );
   const blob = new Blob([response.data]);
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -421,13 +500,20 @@ export const downloadEmailAttachment = async (notificationId: number) => {
   window.URL.revokeObjectURL(url);
 };
 
-export const markEmailNotificationAsRead = async (id: number): Promise<EmailNotification> => {
-  const response = await api.put<EmailNotification>(`/email-notifications/${id}/read`);
+export const markEmailNotificationAsRead = async (
+  id: number,
+): Promise<EmailNotification> => {
+  const response = await api.put<EmailNotification>(
+    `/email-notifications/${id}/read`,
+  );
   return response.data;
 };
 
-
-export const getDashboardStatistics = async (params?: { fromDate?: string; toDate?: string; search?: string }) => {
+export const getDashboardStatistics = async (params?: {
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
+}) => {
   const response = await api.get("/dashboard-statistics", { params });
   return response.data;
 };
@@ -453,12 +539,18 @@ export const downloadDepartmentTemplate = async (): Promise<Blob> => {
   return response.data;
 };
 
-export const getDepartmentHistory = async (departmentId: number): Promise<DepartmentHistory[]> => {
-  const response = await api.get<DepartmentHistory[]>(`/history/${departmentId}`);
+export const getDepartmentHistory = async (
+  departmentId: number,
+): Promise<DepartmentHistory[]> => {
+  const response = await api.get<DepartmentHistory[]>(
+    `/history/${departmentId}`,
+  );
   return response.data;
 };
 
-export const getDepartmentActivityHeaders = async (): Promise<TableHeader[]> => {
+export const getDepartmentActivityHeaders = async (): Promise<
+  TableHeader[]
+> => {
   const response = await api.get<TableHeader[]>("/headers/activity");
   return response.data;
 };

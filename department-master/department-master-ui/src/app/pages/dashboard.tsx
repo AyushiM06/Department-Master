@@ -65,6 +65,7 @@ import {
   searchDepartments,
   getAllUsers,
   getDepartmentTableHeaders,
+  searchEmployees,
 } from "../pages/department/departmentApi";
 
 import type {
@@ -133,6 +134,11 @@ type DepartmentDetailRow = {
   createdAt?: string | null;
   updatedBy?: string | number | null;
   updatedAt?: string | null;
+};
+
+type DepartmentHeadOption = {
+  id: number;
+  name: string;
 };
 
 type DepartmentMasterItem = {
@@ -601,6 +607,10 @@ function Dashboard() {
 
   const [users, setUsers] = useState<UserLookupResponse[]>([]);
 
+  const [departmentHeadOptions, setDepartmentHeadOptions] = useState<
+    DepartmentHeadOption[]
+  >([]);
+
   const [departmentTableHeaders, setDepartmentTableHeaders] = useState<
     TableHeader[]
   >([]);
@@ -650,6 +660,27 @@ function Dashboard() {
       setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       setUsers([]);
+    }
+  };
+  const loadDepartmentHeads = async () => {
+    try {
+      const employees = await searchEmployees("");
+
+      const options = Array.isArray(employees)
+        ? employees
+            .map((employee: { id: number; name: string }) => ({
+              id: Number(employee.id),
+              name: String(employee.name ?? "").trim(),
+            }))
+            .filter(
+              (employee: DepartmentHeadOption) =>
+                employee.name && Number.isFinite(employee.id),
+            )
+        : [];
+
+      setDepartmentHeadOptions(options);
+    } catch (error) {
+      setDepartmentHeadOptions([]);
     }
   };
 
@@ -727,6 +758,7 @@ function Dashboard() {
   useEffect(() => {
     loadDepartmentNames();
     loadUsers();
+    loadDepartmentHeads();
   }, []);
 
   const getNameById = (items: DepartmentMasterItem[], id?: number | null) => {
@@ -764,6 +796,17 @@ function Dashboard() {
     const user = users.find((item) => Number(item.id) === Number(id));
 
     return user?.username || String(id);
+  };
+  const getEmployeeName = (id?: string | number | null) => {
+    if (id === null || id === undefined || id === "") {
+      return "NA";
+    }
+
+    const employee = departmentHeadOptions.find(
+      (item) => Number(item.id) === Number(id),
+    );
+
+    return employee?.name || "NA";
   };
 
   const getDepartmentTableHeader = (field: string, fallback: string) => {
@@ -832,7 +875,8 @@ function Dashboard() {
         accessorKey: "departmentHead",
         header: header("departmentHead", "Department Head"),
         size: 180,
-        Cell: ({ row }) => userCell(row.original.departmentHead),
+        Cell: ({ row }) =>
+          textCell(getEmployeeName(row.original.departmentHead)),
       },
       {
         accessorKey: "branches",
@@ -914,6 +958,7 @@ function Dashboard() {
       masterData.branches,
       masterData.businessUnits,
       users,
+      departmentHeadOptions,
       departmentTableHeaders,
     ],
   );

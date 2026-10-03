@@ -135,6 +135,11 @@ function Navbar() {
     );
 
     window.addEventListener(
+      "department-update-notification",
+      handleNotificationCreated,
+    );
+
+    window.addEventListener(
       "department-export-notification",
       handleNotificationCreated,
     );
@@ -142,6 +147,11 @@ function Navbar() {
     return () => {
       window.removeEventListener(
         "department-import-notification",
+        handleNotificationCreated,
+      );
+
+      window.removeEventListener(
+        "department-update-notification",
         handleNotificationCreated,
       );
 
@@ -166,18 +176,15 @@ function Navbar() {
     if (!match) {
       return rawValue;
     }
-    const [, year, month, day, hour, minute] = match;
+    const [, year, month, day, hour, minute, second = "00"] = match;
     const parsedDate = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
+      `${year}-${month}-${day}T${hour}:${minute}:${second}Z`,
     );
     if (Number.isNaN(parsedDate.getTime())) {
       return rawValue;
     }
     return parsedDate.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
       day: "2-digit",
       month: "short",
       year: "numeric",

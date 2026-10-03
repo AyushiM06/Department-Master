@@ -11,45 +11,25 @@ import java.util.Optional;
 public class DepartmentRequestDto {
 
     private Long id;
-
     private String departmentName;
-
     private String shortName;
-
     private String departmentType;
-
     private Long parentDepartment;
-
     private Long departmentHead;
-
     private List<Long> branches;
-
     private Long businessUnit;
-
     private String costCenter;
-
     private String departmentEmail;
-
     private String departmentPhone;
-
     private List<String> workingDays;
-
     private Long workingShift;
-
     private String description;
-
     private String departmentLogo;
-
     private String documentPath;
-
     private List<String> tags;
-
     private boolean status;
-
     private String keywords;
-
     private String remarks;
-
     public void setDepartmentName(String departmentName) {
         this.departmentName = trim(departmentName);
     }

@@ -222,11 +222,20 @@ type DropdownOption = {
 };
 const formatDate = (value?: string | null) => {
   if (!value) return "NA";
-  const date = new Date(value);
+
+  const normalizedValue =
+    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value)
+      ? value
+      : `${value}Z`;
+
+  const date = new Date(normalizedValue);
+
   if (Number.isNaN(date.getTime())) {
     return value;
   }
+
   return date.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

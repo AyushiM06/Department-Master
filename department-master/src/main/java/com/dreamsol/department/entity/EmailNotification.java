@@ -18,37 +18,24 @@ public class EmailNotification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(nullable = false)
     private String subject;
-
     @Column(nullable = false)
     private String recipient;
-
     @Column(columnDefinition = "TEXT", nullable = false)
     private String body;
-
     @Column(nullable = false, length = 50)
     private String status;
-
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
     private Long departmentId;
-
     @Column(length = 500)
     private String attachmentPath;
-
     private String attachmentFileName;
-
     private Integer totalRecords;
-
     private Integer savedRecords;
-
     private Integer duplicateRecords;
-
     private Integer invalidRecords;
-
     @Column(name = "is_read", nullable = false)
     private boolean read;
 }

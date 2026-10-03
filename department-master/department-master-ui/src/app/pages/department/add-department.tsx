@@ -33,6 +33,7 @@ import {
   uploadDepartmentAttachment,
   getDepartmentDropdownData,
   searchDepartments,
+  createDepartmentEmailNotification,
   type DepartmentDropdownResponse,
   type DepartmentAttachmentUpload,
 } from "./departmentApi";
@@ -364,6 +365,17 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         await uploadDepartmentAttachment(attachments);
       }
 
+      for (const savedDepartment of savedDepartments) {
+        if (savedDepartment?.id) {
+          await createDepartmentEmailNotification(
+            Number(savedDepartment.id),
+            "ADD",
+          );
+        }
+      }
+
+      window.dispatchEvent(new Event("department-import-notification"));
+      await onClose();
       await Swal.fire({
         text:
           formValues.departments.length > 1
@@ -373,8 +385,6 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
         timer: 2000,
         showConfirmButton: false,
       });
-
-      await onClose();
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const backendData = error.response?.data;

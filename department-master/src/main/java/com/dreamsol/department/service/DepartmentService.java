@@ -229,7 +229,10 @@ public class DepartmentService {
         try {
             DepartmentAttachment attachment = departmentAttachmentRepository.findByUuid(uuid).orElse(null);
             if (Objects.isNull(attachment)) return ResponseEntity.notFound().build();
-            Path path = Paths.get(attachment.getFilePath());
+            String filePath = attachment.getFilePath().replace("\\", "/");
+            Path path = Paths.get(filePath);
+            if (!path.isAbsolute())
+                path = Paths.get(System.getProperty("user.dir")).resolve(path).normalize();
             Resource resource = new UrlResource(path.toUri());
             if (!resource.exists() || !resource.isReadable()) return ResponseEntity.notFound().build();
             return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getFileName() + "\"").body(resource);
