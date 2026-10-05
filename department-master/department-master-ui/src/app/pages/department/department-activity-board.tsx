@@ -224,9 +224,7 @@ const formatDate = (value?: string | null) => {
   if (!value) return "NA";
 
   const normalizedValue =
-    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value)
-      ? value
-      : `${value}Z`;
+    value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value) ? value : `${value}Z`;
 
   const date = new Date(normalizedValue);
 
@@ -2311,7 +2309,16 @@ function DepartmentActivity() {
               boxSizing: "border-box",
             }}
           >
-            {isAddFormOpen && <AddDepartment onClose={closeForm} />}
+            {isAddFormOpen && (
+              <AddDepartment
+                onClose={closeForm}
+                departmentTypeOptions={departmentTypeOptions}
+                branchOptions={branchOptions}
+                businessUnitOptions={businessUnitOptions}
+                workingShiftOptions={workingShiftOptions}
+                dropdownLoading={dropdownLoading}
+              />
+            )}
             {isUpdateFormOpen && selectedDepartment && (
               <UpdateDepartment
                 department={selectedDepartment}

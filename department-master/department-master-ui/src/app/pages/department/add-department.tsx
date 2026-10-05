@@ -31,10 +31,8 @@ import {
   searchEmployees,
   createEmployee,
   uploadDepartmentAttachment,
-  getDepartmentDropdownData,
   searchDepartments,
   createDepartmentEmailNotification,
-  type DepartmentDropdownResponse,
   type DepartmentAttachmentUpload,
 } from "./departmentApi";
 
@@ -54,6 +52,11 @@ interface AddDepartmentFormValues {
 
 interface AddDepartmentProps {
   onClose: () => void | Promise<void>;
+  departmentTypeOptions?: Option[];
+  branchOptions?: Option[];
+  businessUnitOptions?: Option[];
+  workingShiftOptions?: Option[];
+  dropdownLoading?: boolean;
 }
 
 const workingDaysOptions: Option[] = [
@@ -76,14 +79,14 @@ const tagOptions: TagOption[] = [
 const isFile = (value: unknown): value is File =>
   typeof File !== "undefined" && value instanceof File;
 
-function AddDepartment({ onClose }: AddDepartmentProps) {
-  const [departmentTypeOptions, setDepartmentTypeOptions] = useState<Option[]>(
-    [],
-  );
-  const [branchOptions, setBranchOptions] = useState<Option[]>([]);
-  const [businessUnitOptions, setBusinessUnitOptions] = useState<Option[]>([]);
-  const [shiftOptions, setShiftOptions] = useState<Option[]>([]);
-
+function AddDepartment({
+  onClose,
+  departmentTypeOptions = [],
+  branchOptions = [],
+  businessUnitOptions = [],
+  workingShiftOptions = [],
+  dropdownLoading = false,
+}: AddDepartmentProps) {
   const [parentDepartmentOptions, setParentDepartmentOptions] = useState<
     AutoCompleteOption[]
   >([]);
@@ -92,7 +95,6 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
     AutoCompleteOption[]
   >([]);
 
-  const [dropdownLoading, setDropdownLoading] = useState(false);
   const [parentDepartmentLoading, setParentDepartmentLoading] = useState(false);
   const [, setDepartmentHeadLoading] = useState(false);
 
@@ -115,77 +117,6 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
     control,
     name: "departments",
   });
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadDropdownData = async () => {
-      try {
-        setDropdownLoading(true);
-
-        const data: DepartmentDropdownResponse =
-          await getDepartmentDropdownData();
-
-        if (!mounted) return;
-
-        const departmentTypes = Array.isArray(data?.departmentTypes)
-          ? data.departmentTypes
-          : [];
-
-        const mappedDepartmentTypes: Option[] = departmentTypes.map((item) => ({
-          label: typeof item === "string" ? item : String(item.name),
-          value: typeof item === "string" ? item : String(item.name),
-        }));
-
-        const branches = Array.isArray(data?.branches) ? data.branches : [];
-
-        const mappedBranches: Option[] = branches.map((item) => ({
-          label: String(item.name),
-          value: Number(item.id),
-        }));
-
-        const businessUnits = Array.isArray(data?.businessUnits)
-          ? data.businessUnits
-          : [];
-
-        const mappedBusinessUnits: Option[] = businessUnits.map((item) => ({
-          label: String(item.name),
-          value: Number(item.id),
-        }));
-
-        const workingShifts = Array.isArray(data?.workingShifts)
-          ? data.workingShifts
-          : [];
-
-        const mappedShifts: Option[] = workingShifts.map((item) => ({
-          label: String(item.name),
-          value: Number(item.id),
-        }));
-
-        setDepartmentTypeOptions(mappedDepartmentTypes);
-        setBranchOptions(mappedBranches);
-        setBusinessUnitOptions(mappedBusinessUnits);
-        setShiftOptions(mappedShifts);
-      } catch {
-        if (!mounted) return;
-
-        setDepartmentTypeOptions([]);
-        setBranchOptions([]);
-        setBusinessUnitOptions([]);
-        setShiftOptions([]);
-      } finally {
-        if (mounted) {
-          setDropdownLoading(false);
-        }
-      }
-    };
-
-    loadDropdownData();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const loadParentDepartments = async () => {
     try {
@@ -781,7 +712,7 @@ function AddDepartment({ onClose }: AddDepartmentProps) {
                           name={field.name}
                           value={field.value ?? ""}
                           onChange={(e) => field.onChange(e.target.value)}
-                          options={shiftOptions}
+                          options={workingShiftOptions}
                           error={Boolean(fieldState.error)}
                           helperText={fieldState.error?.message}
                           disabled={dropdownLoading}
