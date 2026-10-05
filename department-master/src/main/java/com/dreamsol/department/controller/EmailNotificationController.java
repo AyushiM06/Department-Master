@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/department/email-notifications")
+@RequestMapping("department/email-notifications")
 @RequiredArgsConstructor
 public class EmailNotificationController {
 
@@ -26,22 +26,22 @@ public class EmailNotificationController {
         return emailNotificationService.getEmailNotifications();
     }
 
-    @PostMapping("/import")
+    @PostMapping("import")
     public ResponseEntity<?> createImportEmailNotification(@RequestParam String filePath, @RequestParam String fileName, @RequestParam Integer totalRecords, @RequestParam Integer savedRecords, @RequestParam Integer duplicateRecords, @RequestParam Integer invalidRecords) {
         return emailNotificationService.createImportEmailNotification(filePath, fileName, totalRecords, savedRecords, duplicateRecords, invalidRecords);
     }
 
-    @PostMapping("/department")
+    @PostMapping("department")
     public ResponseEntity<?> createDepartmentEmailNotification(@RequestParam List<Long> departmentIds, @RequestParam String action) {
         return emailNotificationService.createDepartmentEmailNotification(departmentIds, action);
     }
 
-    @GetMapping("/download/{id}")
+    @GetMapping("download/{id}")
     public ResponseEntity<Resource> downloadEmailAttachment(@PathVariable Long id) {
         return emailNotificationService.downloadEmailAttachment(id);
     }
 
-    @PutMapping("/{id}/read")
+    @PutMapping("{id}/read")
     public ResponseEntity<?> markEmailNotificationAsRead(@PathVariable Long id) {
         return emailNotificationService.markEmailNotificationAsRead(id);
     }

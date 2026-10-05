@@ -14,38 +14,38 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/department/headers")
+@RequestMapping("department/headers")
 @RequiredArgsConstructor
 public class DepartmentHeaderController {
 
     private final DepartmentHeaderService departmentHeaderService;
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
-    @GetMapping("/excel")
+    @GetMapping("excel")
     public ResponseEntity<List<ExcelHeaderResponseDto>> getDepartmentExcelHeaders() {
         return ResponseEntity.ok(departmentHeaderService.getDepartmentExcelHeaders());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
-    @GetMapping("/table")
+    @GetMapping("table")
     public ResponseEntity<List<TableHeaderResponseDto>> getDepartmentTableHeaders() {
         return ResponseEntity.ok(departmentHeaderService.getDepartmentTableHeaders());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
-    @GetMapping("/dashboard")
+    @GetMapping("dashboard")
     public ResponseEntity<Map<String, List<TableHeaderResponseDto>>> getDashboardHeaders() {
         return ResponseEntity.ok(departmentHeaderService.getDashboardHeaders());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
-    @GetMapping("/import-preview")
+    @GetMapping("import-preview")
     public ResponseEntity<List<TableHeaderResponseDto>> getImportPreviewHeaders() {
         return ResponseEntity.ok(departmentHeaderService.getImportPreviewHeaders());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGEMENT','HOD','USER')")
-    @GetMapping("/activity")
+    @GetMapping("activity")
     public ResponseEntity<List<TableHeaderResponseDto>> getActivityHeaders() {
         return ResponseEntity.ok(departmentHeaderService.getActivityHeaders());
     }

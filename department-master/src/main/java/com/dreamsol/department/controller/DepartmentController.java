@@ -22,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("department")
@@ -100,7 +99,7 @@ public class DepartmentController {
         return ResponseEntity.ok(departmentRepository.findDepartmentsForExport());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGEMENT', 'HOD', 'USER')")
     @GetMapping("dashboard-statistics")
     public ResponseEntity<?> getDashboardStatistics(@RequestParam String fromDate, @RequestParam String toDate, @RequestParam(required = false) String search) {
         LocalDateTime from = LocalDateTime.parse(fromDate + "T00:00:00");
