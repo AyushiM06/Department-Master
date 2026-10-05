@@ -589,77 +589,106 @@ function Navbar() {
         </Box>
 
         {!isLoadingEmails && emailNotifications.length > 0 && (
-          <Box
-            sx={{
-              width: "100%",
-              overflow: "hidden",
-              borderTop: "1px solid #E8E2F0",
-              backgroundColor: "#FFFFFF",
-            }}
-          >
-            <TablePagination
-              component="div"
-              count={emailNotifications.length}
-              page={emailPage}
-              onPageChange={(_, newPage) => {
-                setEmailPage(newPage);
-              }}
-              rowsPerPage={emailPageSize}
-              onRowsPerPageChange={(event) => {
-                setEmailPageSize(Number(event.target.value));
-                setEmailPage(0);
-              }}
-              rowsPerPageOptions={[5, 10, 20, 50]}
-              showFirstButton
-              showLastButton
-              sx={{
-                width: "100%",
-                overflow: "hidden",
-                minHeight: 52,
-                color: "#374151",
-                "& .MuiTablePagination-toolbar": {
-                  minHeight: 52,
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                  gap: 0,
-                  overflow: "hidden",
-                  flexWrap: "nowrap",
-                },
-                "& .MuiTablePagination-selectLabel": {
-                  color: "#6B7280",
-                  fontSize: 11,
-                  margin: 0,
-                },
-                "& .MuiTablePagination-select": {
-                  fontSize: 11,
-                  borderRadius: 1,
-                  paddingLeft: "6px",
-                  paddingRight: "22px",
-                  marginLeft: "4px",
-                  marginRight: "4px",
-                },
-                "& .MuiTablePagination-input": {
-                  minWidth: 45,
-                },
-                "& .MuiTablePagination-displayedRows": {
-                  color: "#6B7280",
-                  fontSize: 11,
-                  marginLeft: "4px",
-                  marginRight: "4px",
-                },
-                "& .MuiTablePagination-actions": {
-                  marginLeft: "4px",
-                  display: "flex",
-                  alignItems: "center",
-                },
-                "& .MuiTablePagination-actions button": {
-                  color: "#374151",
-                  padding: "5px",
-                },
-              }}
-            />
-          </Box>
-        )}
+  <Box
+    sx={{
+      width: "100%",
+      borderTop: "1px solid #E2E8F0",
+      backgroundColor: "#FFFFFF",
+      px: 1,
+      py: 0.5,
+    }}
+  >
+    <TablePagination
+      component="div"
+      count={emailNotifications.length}
+      page={emailPage}
+      onPageChange={(_, newPage) => {
+        setEmailPage(newPage);
+      }}
+      rowsPerPage={emailPageSize}
+      onRowsPerPageChange={(event) => {
+        setEmailPageSize(Number(event.target.value));
+        setEmailPage(0);
+      }}
+      rowsPerPageOptions={[5, 10, 20, 50]}
+      labelRowsPerPage="Rows"
+      labelDisplayedRows={({ from, to, count }) =>
+        `${from}–${to} of ${count}`
+      }
+      sx={{
+        width: "100%",
+        minHeight: 48,
+        color: "#475569",
+
+        "& .MuiTablePagination-toolbar": {
+          minHeight: 48,
+          padding: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "nowrap",
+          gap: 0.5,
+        },
+
+        "& .MuiTablePagination-selectLabel": {
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#64748B",
+          margin: 0,
+          whiteSpace: "nowrap",
+        },
+
+        "& .MuiTablePagination-select": {
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#334155",
+          minWidth: 42,
+          padding: "4px 22px 4px 6px",
+          margin: 0,
+          borderRadius: "6px",
+          backgroundColor: "#F8FAFC",
+        },
+
+        "& .MuiTablePagination-input": {
+          margin: 0,
+        },
+
+        "& .MuiTablePagination-displayedRows": {
+          fontSize: 11,
+          fontWeight: 600,
+          color: "#64748B",
+          margin: 0,
+          whiteSpace: "nowrap",
+        },
+
+        "& .MuiTablePagination-actions": {
+          marginLeft: "2px",
+          display: "flex",
+          alignItems: "center",
+          gap: "2px",
+        },
+
+        "& .MuiTablePagination-actions button": {
+          width: 30,
+          height: 30,
+          padding: 0,
+          borderRadius: "7px",
+          color: "#475569",
+          transition: "all 0.2s ease",
+
+          "&:hover": {
+            backgroundColor: "#F0FDFA",
+            color: "#0F766E",
+          },
+
+          "&.Mui-disabled": {
+            color: "#CBD5E1",
+          },
+        },
+      }}
+    />
+  </Box>
+)}
       </Popover>
 
       <Dialog
